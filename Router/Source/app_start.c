@@ -55,14 +55,6 @@
 #include "app_common.h"
 #include "app_main.h"
 #include "portmacro.h"
-#ifdef APP_NTAG_ICODE
-#include "ntag_nwk.h"
-#include "app_ntag_icode.h"
-#endif
-#ifdef APP_NTAG_AES
-#include "ntag_nwk.h"
-#include "app_ntag_aes.h"
-#endif
 
 /****************************************************************************/
 /***        Macro Definitions                                             ***/
@@ -161,29 +153,8 @@ PUBLIC void vAppMain(void)
     DBG_vPrintf(TRACE_APP, "APP: Entering APP_vInitialise()\n");
     APP_vInitialise();
 
-#if (defined APP_NTAG_ICODE) || (defined APP_NTAG_AES)
-    DBG_vPrintf(TRACE_APP, "\nAPP: Entering APP_vNtagPdmLoad()");
-    /* Didn't start BDB using PDM data ? */
-    if (FALSE == APP_bNtagPdmLoad())
-#endif
-    {
-        DBG_vPrintf(TRACE_APP, "APP: Entering BDB_vStart()\n");
-        BDB_vStart();
-
-#ifdef APP_NTAG_AES
-        DBG_vPrintf(TRACE_APP, "\nAPP: Entering APP_vNtagStart()");
-        APP_vNtagStart(NFC_NWK_NSC_DEVICE_ZIGBEE_ROUTER_DEVICE);
-#endif
-    }
-
-#ifdef APP_NTAG_ICODE
-    /* Not waking from deep sleep ? */
-    if (0 == (u16AHI_PowerStatus() & (1 << 11)))
-    {
-        DBG_vPrintf(TRACE_APP, "\nAPP: Entering APP_vNtagStart()");
-        APP_vNtagStart(ROUTER_APPLICATION_ENDPOINT);
-    }
-#endif
+    DBG_vPrintf(TRACE_APP, "APP: Entering BDB_vStart()\n");
+    BDB_vStart();
 
     DBG_vPrintf(TRACE_APP, "APP: Entering APP_vMainLoop()\n");
     APP_vMainLoop();

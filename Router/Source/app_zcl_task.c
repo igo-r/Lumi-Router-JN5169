@@ -47,7 +47,6 @@
 #include "ZTimer.h"
 #include "zcl.h"
 #include "zcl_options.h"
-#include "app_led_interface.h"
 #include "app_zcl_task.h"
 #include "app_router_node.h"
 #include "app_common.h"
@@ -136,7 +135,6 @@ PUBLIC void APP_ZCL_vInitialise(void)
     }
 
     APP_vZCL_DeviceSpecific_Init();
-    APP_vSetLed( sBaseDevice.sOnOffServerCluster.bOnOff);
 }
 
 
@@ -431,7 +429,6 @@ PUBLIC void APP_vHandleIdentify(uint16 u16Time)
             /*
              * Restore to off/off state
              */
-        APP_vSetLed( sBaseDevice.sOnOffServerCluster.bOnOff);
         bActive = FALSE;
     }
     else
@@ -441,7 +438,6 @@ PUBLIC void APP_vHandleIdentify(uint16 u16Time)
             bActive = TRUE;
             u8IdentifyCount = 5;
             bIdentifyState = TRUE;
-            APP_vSetLed( TRUE );
         }
     }
 }
@@ -470,7 +466,6 @@ PUBLIC void vIdEffectTick(uint8 u8Endpoint)
         {
             u8IdentifyCount = 5;
             bIdentifyState = (bIdentifyState)? FALSE: TRUE;
-            APP_vSetLed( bIdentifyState);
         }
     }
 }
@@ -491,12 +486,6 @@ PRIVATE void APP_vHandleClusterCustomCommands(tsZCL_CallBackEvent *psEvent)
 {
       switch(psEvent->uMessage.sClusterCustomMessage.u16ClusterId)
     {
-        case GENERAL_CLUSTER_ID_ONOFF:
-        {
-            APP_vSetLed( sBaseDevice.sOnOffServerCluster.bOnOff);
-        }
-        break;
-
         case GENERAL_CLUSTER_ID_IDENTIFY:
         {
             tsCLD_IdentifyCallBackMessage *psCallBackMessage = (tsCLD_IdentifyCallBackMessage*)psEvent->uMessage.sClusterCustomMessage.pvCustomData;
@@ -567,7 +556,7 @@ PRIVATE void APP_vZCL_DeviceSpecific_Init(void)
     sBaseDevice.sOnOffServerCluster.bOnOff = FALSE;
     memcpy(sBaseDevice.sBasicServerCluster.au8ManufacturerName, "NXP", CLD_BAS_MANUF_NAME_SIZE);
     memcpy(sBaseDevice.sBasicServerCluster.au8ModelIdentifier, "openlumi.gw_router.jn5169", CLD_BAS_MODEL_ID_SIZE);
-    memcpy(sBaseDevice.sBasicServerCluster.au8DateCode, "20150219", CLD_BAS_DATE_SIZE);
+    memcpy(sBaseDevice.sBasicServerCluster.au8DateCode, "20210119", CLD_BAS_DATE_SIZE);
     memcpy(sBaseDevice.sBasicServerCluster.au8SWBuildID, "1000-0001", CLD_BAS_SW_BUILD_SIZE);
 }
 

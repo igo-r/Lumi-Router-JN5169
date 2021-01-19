@@ -46,17 +46,10 @@
 #include "AppHardwareApi.h"
 #include "dbg.h"
 #include "app_main.h"
-#include "app_buttons.h"
 #include "app_events.h"
 #include "app_zcl_task.h"
 #include "PDM.h"
 #include "app_router_node.h"
-#ifdef APP_NTAG_ICODE
-#include "app_ntag_icode.h"
-#endif
-#ifdef APP_NTAG_AES
-#include "app_ntag_aes.h"
-#endif
 
 /****************************************************************************/
 /***        Macro Definitions                                             ***/
@@ -70,11 +63,7 @@
 
 #define APP_QUEUE_SIZE               8
 #define BDB_QUEUE_SIZE               2
-#if (defined APP_NTAG_ICODE) || (defined APP_NTAG_AES)
-#define APP_ZTIMER_STORAGE           3 /* NTAG: Added timer */
-#else
 #define APP_ZTIMER_STORAGE           2
-#endif
 #define TIMER_QUEUE_SIZE             8
 #define MLME_QUEQUE_SIZE             8
 #define MCPS_QUEUE_SIZE             20
@@ -92,11 +81,7 @@
 /***        Exported Variables                                            ***/
 /****************************************************************************/
 
-PUBLIC uint8 u8TimerButtonScan;
 PUBLIC uint8 u8TimerZCL;
-#if (defined APP_NTAG_ICODE) || (defined APP_NTAG_AES)
-PUBLIC uint8 u8TimerNtag;
-#endif
 
 PUBLIC tszQueue APP_msgBdbEvents;
 PUBLIC tszQueue APP_msgAppEvents;
@@ -200,11 +185,7 @@ PUBLIC void APP_vInitResources(void)
     ZTIMER_eInit(asTimers, sizeof(asTimers) / sizeof(ZTIMER_tsTimer));
 
     /* Create Z timers */
-    ZTIMER_eOpen(&u8TimerButtonScan,    APP_cbTimerButtonScan,  NULL, ZTIMER_FLAG_PREVENT_SLEEP);
     ZTIMER_eOpen(&u8TimerZCL,          APP_cbTimerZclTick,      NULL, ZTIMER_FLAG_PREVENT_SLEEP);
-#if (defined APP_NTAG_ICODE) || (defined APP_NTAG_AES)
-    ZTIMER_eOpen(&u8TimerNtag,         APP_cbNtagTimer,         NULL, ZTIMER_FLAG_PREVENT_SLEEP);
-#endif
 
     /* Create all the queues */
     ZQ_vQueueCreate(&APP_msgAppEvents,     APP_QUEUE_SIZE,     sizeof(APP_tsEvent),        (uint8*)asAppEvent);

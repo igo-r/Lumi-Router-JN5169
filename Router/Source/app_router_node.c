@@ -53,8 +53,6 @@
 #include "zps_apl_aps.h"
 #include "app_common.h"
 #include "app_main.h"
-#include "app_buttons.h"
-#include "app_led_interface.h"
 #include "ZTimer.h"
 #include "app_events.h"
 #include <rnd_pub.h>
@@ -65,14 +63,6 @@
 #include "zcl_options.h"
 #include "zcl.h"
 #include "app_reporting.h"
-#ifdef APP_NTAG_ICODE
-#include "app_ntag_icode.h"
-#include "nfc_nwk.h"
-#endif
-#ifdef APP_NTAG_AES
-#include "app_ntag_aes.h"
-#include "nfc_nwk.h"
-#endif
 
 /****************************************************************************/
 /***        Macro Definitions                                             ***/
@@ -108,7 +98,6 @@
 PRIVATE void vAppHandleAfEvent( BDB_tsZpsAfEvent *psZpsAfEvent);
 PRIVATE void vAppHandleZdoEvents( BDB_tsZpsAfEvent *psZpsAfEvent);
 PRIVATE void APP_vBdbInit(void);
-PRIVATE void vDeletePDMOnButtonPress(uint8 u8ButtonDIO);
 #if BDB_JOIN_USES_INSTALL_CODE_KEY == TRUE
 PRIVATE void APP_vSetICDerivedLinkKey(void);
 #endif
@@ -185,10 +174,6 @@ PUBLIC void APP_vInitialiseRouter(void)
     /* Stay awake */
     PWRM_eStartActivity();
 
-    APP_vLedInitialise();
-
-    APP_bButtonInitialise();
-
     eNodeState = E_STARTUP;
     PDM_eReadDataFromRecord(PDM_ID_APP_ROUTER,
                             &eNodeState,
@@ -210,9 +195,6 @@ PUBLIC void APP_vInitialiseRouter(void)
      * HERE
      */
     APP_vBdbInit();
-
-    /* Delete PDM if required */
-    vDeletePDMOnButtonPress(APP_BUTTONS_BUTTON_1);
 
     /* Always initialise any peripherals used by the application
      * HERE
@@ -327,81 +309,7 @@ PUBLIC void APP_taskRouter(void)
     {
         DBG_vPrintf(TRACE_APP, "ZPR: App event %d, NodeState=%d\n", sAppEvent.eType, eNodeState);
 
-        if(sAppEvent.eType == APP_E_EVENT_BUTTON_DOWN)
-        {
-
-            switch(sAppEvent.uEvent.sButton.u8Button)
-            {
-            BDB_teStatus eStatus;
-                case APP_E_BUTTONS_BUTTON_1:
-                    if (eNodeState == E_RUNNING)
-                    {
-                        DBG_vPrintf(TRACE_APP_EVENT, "APP_EVENT: Network steering and F&B as Target\n");
-                        eStatus = BDB_eNsStartNwkSteering();
-                        if (eStatus != 0)
-                        {
-                            DBG_vPrintf(TRACE_APP_EVENT, "APP_EVENT: Network Steering %02x\n", eStatus);
-                        }
-                        eStatus = BDB_eFbTriggerAsTarget(ROUTER_APPLICATION_ENDPOINT);
-                        if (eStatus != 0 && eStatus != 9)
-                        {
-                            DBG_vPrintf(TRACE_APP_EVENT, "APP_EVENT: Fiind and Bind Failed %02x\n", eStatus);
-                        }
-                    }
-                    else
-                    {
-                        DBG_vPrintf(TRACE_APP_EVENT, "APP_EVENT: Try Network Formation\n");
-                        eStatus = BDB_eNfStartNwkFormation();
-                        if (eStatus != 0 && eStatus != 7)
-                        {
-                            DBG_vPrintf(TRACE_APP_EVENT, "APP_EVENT: Formation Failed %02x\n", eStatus);
-                        }
-                        else
-                        {DBG_vPrintf(TRACE_APP_EVENT, "APP-ZDO: Network started Channel = %d\n", ZPS_u8AplZdoGetRadioChannel() );
-
-                        }
-                    }
-                    break;
-
-#ifdef APP_NTAG_ICODE
-                case APP_E_BUTTONS_NFC_FD:
-                    DBG_vPrintf(TRACE_APP_EVENT, "APP_EVENT: NFC_FD DOWN\n");
-                    APP_vNtagStart(ROUTER_APPLICATION_ENDPOINT);
-                    break;
-#endif
-
-#ifdef APP_NTAG_AES
-                case APP_E_BUTTONS_NFC_FD:
-                    DBG_vPrintf(TRACE_APP_EVENT, "APP_EVENT: NFC_FD DOWN\n");
-                    APP_vNtagStart(NFC_NWK_NSC_DEVICE_ZIGBEE_ROUTER_DEVICE);
-                    break;
-#endif
-
-                default:
-                    break;
-            }
-        }
-#ifdef APP_NTAG_ICODE
-        else if(sAppEvent.eType == APP_E_EVENT_BUTTON_UP)
-        {
-            if (APP_E_BUTTONS_NFC_FD == sAppEvent.uEvent.sButton.u8Button)
-            {
-                DBG_vPrintf(TRACE_APP_EVENT, "APP_EVENT: NFC_FD UP\n");
-                  APP_vNtagStart(ROUTER_APPLICATION_ENDPOINT);
-            }
-        }
-#endif
-#ifdef APP_NTAG_AES
-        else if(sAppEvent.eType == APP_E_EVENT_BUTTON_UP)
-        {
-            if (APP_E_BUTTONS_NFC_FD == sAppEvent.uEvent.sButton.u8Button)
-            {
-                DBG_vPrintf(TRACE_APP_EVENT, "APP_EVENT: NFC_FD UP\n");
-                  APP_vNtagStart(NFC_NWK_NSC_DEVICE_ZIGBEE_ROUTER_DEVICE);
-            }
-        }
-#endif
-        else if (sAppEvent.eType == APP_E_EVENT_LEAVE_AND_RESET)
+        if (sAppEvent.eType == APP_E_EVENT_LEAVE_AND_RESET)
         {
             if (eNodeState == E_RUNNING)
             {
@@ -518,16 +426,6 @@ PRIVATE void vAppHandleZdoEvents( BDB_tsZpsAfEvent *psZpsAfEvent)
             DBG_vPrintf(TRACE_APP, "APP-ZDO: Joined Network Addr %04x Rejoin %d\n",
                     psAfEvent->uEvent.sNwkJoinedEvent.u16Addr,
                     psAfEvent->uEvent.sNwkJoinedEvent.bRejoin);
-            #ifdef APP_NTAG_ICODE
-            {
-                /* Not a rejoin ? */
-                if (FALSE == psAfEvent->uEvent.sNwkJoinedEvent.bRejoin)
-                {
-                    /* Write network data to tag */
-                    APP_vNtagStart(ROUTER_APPLICATION_ENDPOINT);
-                }
-            }
-            #endif
             break;
         case ZPS_EVENT_NWK_FAILED_TO_START:
             DBG_vPrintf(TRACE_APP, "APP-ZDO: Network Failed To start\n");
@@ -674,50 +572,6 @@ PRIVATE void APP_vBdbInit(void)
     sBDB.sAttrib.bbdbNodeIsOnANetwork = ((eNodeState >= E_RUNNING)?(TRUE):(FALSE));
     sInitArgs.hBdbEventsMsgQ = &APP_msgBdbEvents;
     BDB_vInit(&sInitArgs);
-}
-
-/****************************************************************************
- *
- * NAME: vDeletePDMOnButtonPress
- *
- * DESCRIPTION:
- * PDM context clearing on button press
- *
- * RETURNS:
- * void
- *
- ****************************************************************************/
-PRIVATE void vDeletePDMOnButtonPress(uint8 u8ButtonDIO)
-{
-    bool_t bDeleteRecords = FALSE;
-    uint32 u32Buttons = u32AHI_DioReadInput() & (1 << u8ButtonDIO);
-    if (u32Buttons == 0)
-    {
-        bDeleteRecords = TRUE;
-    }
-    else
-    {
-        bDeleteRecords = FALSE;
-    }
-    /* If required, at this point delete the network context from flash, perhaps upon some condition
-     * For example, check if a button is being held down at reset, and if so request the Persistent
-     * Data Manager to delete all its records:
-     * e.g. bDeleteRecords = vCheckButtons();
-     * Alternatively, always call PDM_vDeleteAllDataRecords() if context saving is not required.
-     */
-    if(bDeleteRecords)
-    {
-        if (ZPS_E_SUCCESS !=  ZPS_eAplZdoLeaveNetwork(0, FALSE,FALSE)) {
-            /* Leave failed,so just reset everything */
-            DBG_vPrintf(TRACE_APP,"Deleting the PDM\n");
-            APP_vFactoryResetRecords();
-            while (u32Buttons == 0)
-            {
-                u32Buttons = u32AHI_DioReadInput() & (1 << u8ButtonDIO);
-            }
-            vAHI_SwReset();
-        }
-    }
 }
 
 #if BDB_JOIN_USES_INSTALL_CODE_KEY == TRUE

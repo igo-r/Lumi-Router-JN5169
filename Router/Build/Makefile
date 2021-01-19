@@ -44,8 +44,7 @@ APP_BLD_DATE = 20210119
 
 JENNIC_CHIP ?= JN5169
 JENNIC_CHIP_FAMILY ?=JN516x
-JENNIC_PCB             ?= DEVKIT4
- 
+
 STACK_SIZE = 5000
 MINIMUM_HEAP_SIZE = 2000
 
@@ -65,27 +64,10 @@ CFLAGS         += -DSINGLE_CHANNEL=$(SINGLE_CHANNEL)
 
 ###############################################################################
 # Default DK4 development kit target hardware
-
-DR ?= DR1175
-CFLAGS  += -DBUTTON_MAP_$(DR)
+JENNIC_PCB ?= DEVKIT4
 
 #Always tell any actual drivers they're running under an RTOS in this usage
 CFLAGS  += -DRTOS
-
-# Tell the code what target hardware is  
-CFLAGS  += -D$(DR)
-
-# NFC NTAG ICODE (new) functionality
-APP_NTAG_ICODE ?= 1
-ifeq ($(APP_NTAG_ICODE), 1)
-CFLAGS  += -DAPP_NTAG_ICODE
-endif
-
-# NFC NTAG AES (old) functionality
-APP_NTAG_AES ?= 0
-ifeq ($(APP_NTAG_AES), 1)
-CFLAGS  += -DAPP_NTAG_AES
-endif
 
 ###############################################################################
 # Select the network stack (e.g. MAC, ZBPro, ZCL)
@@ -106,12 +88,6 @@ BDB_SUPPORT_NWK_STEERING ?= 1
 BDB_SUPPORT_NWK_FORMATION ?= 1
 #BDB_SUPPORT_FIND_AND_BIND_INITIATOR ?= 1
 BDB_SUPPORT_FIND_AND_BIND_TARGET ?= 1
-ifeq ($(APP_NTAG_ICODE), 1)
-BDB_SUPPORT_OOBC ?= 1
-endif
-ifeq ($(APP_NTAG_AES), 1)
-BDB_SUPPORT_OOBC ?= 1
-endif
 
 ###############################################################################
 # Debug options define DEBUG either HW or SW
@@ -141,9 +117,6 @@ CFLAGS +=  -DDEBUG_EXCEPTIONS
 #CFLAGS += -DDEBUG_CLD_ONOFF
 #CFLAGS += -DDEBUG_CLD_GROUPS
 #CFLAGS  += -DSTRICT_PARAM_CHECK
-CFLAGS += -DDEBUG_APP_BUTTON
-CFLAGS += -DDEBUG_APP_NTAG
-CFLAGS += -DDEBUG_APP_ICODE
 endif
 
 CFLAGS += -D$(TARGET)
@@ -179,31 +152,12 @@ APPSRC += zps_gen.c
 APPSRC += app_start.c
 APPSRC += app_router_node.c
 APPSRC += app_zcl_task.c
-APPSRC += app_buttons.c
-APPSRC += app_led_interface.c
 #APPSRC += StackMeasure.c
-ifeq ($(APP_NTAG_ICODE),1)
-APPSRC += app_ntag_icode.c
-#APPSRC += app_icode.c
-endif
-ifeq ($(APP_NTAG_AES),1)
-APPSRC += app_ntag_aes.c
-endif
 APPSRC += app_reporting.c
 
 APP_ZPSCFG = app.zpscfg
 
 OPTIONAL_STACK_FEATURES = $(shell $(ZPSCONFIG) -n $(TARGET) -f $(APP_COMMON_SRC_DIR)/$(APP_ZPSCFG) -y )
-
-# Construct binary features list 
-
-ifeq ($(APP_NTAG_ICODE),1)
-TARGET_FEATURES:=$(TARGET_FEATURES)_NtagIcode
-endif
-
-ifeq ($(APP_NTAG_AES),1)
-TARGET_FEATURES:=$(TARGET_FEATURES)_NtagAes
-endif
 
 # Construct binary hardware list
 
@@ -227,38 +181,6 @@ INCFLAGS += -I$(COMPONENTS_BASE_DIR)/Xcv/Include/
 INCFLAGS += -I$(COMPONENTS_BASE_DIR)/Recal/Include/
 INCFLAGS += -I$(COMPONENTS_BASE_DIR)/MicroSpecific/Include
 INCFLAGS += -I$(COMPONENTS_BASE_DIR)/HardwareAPI/Include
-
-###############################################################################
-# Application libraries
-# Specify additional Component libraries
-
-#APPLIBS += 
-
-###############################################################################
-# NTAG ICODE library
-ifeq ($(APP_NTAG_ICODE),1)
-# NTAG library folder
-APP_NTAG_LIB_DIR  = $(APP_BASE)/NFC
-# NTAG library
-LDLIBS           += NTAG_$(JENNIC_CHIP_FAMILY)
-# NTAG library path
-LDFLAGS          += -L$(APP_NTAG_LIB_DIR)/Library
-# NTAG include path
-INCFLAGS         += -I$(APP_NTAG_LIB_DIR)/Include
-endif
-
-###############################################################################
-# NTAG AES library
-ifeq ($(APP_NTAG_AES),1)
-# NTAG library folder
-APP_NTAG_LIB_DIR  = $(APP_BASE)/NTAG
-# NTAG library
-LDLIBS += NTAG_$(JENNIC_CHIP_FAMILY)
-# NTAG library path
-LDFLAGS += -L$(APP_NTAG_LIB_DIR)/Library
-# NTAG include path
-INCFLAGS += -I$(APP_NTAG_LIB_DIR)/Include
-endif
 
 ###############################################################################
 

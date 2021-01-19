@@ -59,11 +59,7 @@ PUBLIC void APP_vSetUpHardware(void);
 /***        External Variables                                            ***/
 /****************************************************************************/
 
-extern PUBLIC uint8 u8TimerButtonScan;
 extern PUBLIC uint8 u8TimerZCL;
-#if (defined APP_NTAG_ICODE) || (defined APP_NTAG_AES)
-extern PUBLIC uint8 u8TimerNtag;
-#endif
 
 extern PUBLIC tszQueue zps_msgMlmeDcfmInd;
 extern PUBLIC tszQueue zps_msgMcpsDcfmInd;

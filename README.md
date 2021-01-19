@@ -12,7 +12,7 @@ This firmware is a replacement for the original firmware for the Zigbee chip JN5
 2. Issue the following commands in the command line.
 
 ```shell
-wget https://github.com/igo-r/Lumi-Router-JN5169/releases/download/20210119/Lumi_Router_JN5169_20210119.bin -O /tmp/Lumi_Router.bin 
+wget https://github.com/igo-r/Lumi-Router-JN5169/releases/download/2021.1.20/Lumi_Router_JN5169_20210120.bin -O /tmp/Lumi_Router.bin 
 jnflash /tmp/Lumi_Router.bin
 ```
 

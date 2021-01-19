@@ -119,7 +119,7 @@ enum
 #define CLD_BAS_STACK_VERSION       (1)
 #define CLD_BAS_HARDWARE_VERSION    (1)
 #define CLD_BAS_MANUF_NAME_SIZE     (3)
-#define CLD_BAS_MODEL_ID_SIZE       (10)
+#define CLD_BAS_MODEL_ID_SIZE       (25)
 #define CLD_BAS_DATE_SIZE           (8)
 #define CLD_BAS_POWER_SOURCE        E_CLD_BAS_PS_SINGLE_PHASE_MAINS
 #define CLD_BAS_SW_BUILD_SIZE       (9)

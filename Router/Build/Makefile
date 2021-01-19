@@ -34,6 +34,9 @@
 
 TARGET = Router
 
+APP_BLD_NAME = Lumi_Router
+APP_BLD_DATE = 20210119
+
 ###############################################################################
 #User definable make parameters that may be overwritten from the command line
 
@@ -204,7 +207,7 @@ endif
 
 # Construct binary hardware list
 
-TARGET_HARDWARE:=_$(JENNIC_CHIP)_$(DR)$(VARIANT)
+TARGET_HARDWARE:=_$(JENNIC_CHIP)
 
 ifneq ($(SINGLE_CHANNEL), 0)
 TARGET_HARDWARE:=$(TARGET_HARDWARE)_CH$(SINGLE_CHANNEL)
@@ -300,7 +303,7 @@ LDLIBS += JPT_$(JENNIC_CHIP)
 vpath % $(APP_SRC_DIR):$(APP_COMMON_SRC_DIR):$(ZCL_SRC_DIRS):$(ZCL_SRC):$(BDB_SRC_DIR):$(HW_SRC_DIR)
 
 
-all: $(APP_BLD_DIR)/$(TARGET)$(TARGET_FEATURES)$(TARGET_HARDWARE).bin
+all: $(APP_BLD_DIR)/$(APP_BLD_NAME)$(TARGET_HARDWARE)_$(APP_BLD_DATE).bin
 
 $(APP_SRC_DIR)/pdum_gen.c $(APP_SRC_DIR)/pdum_gen.h: $(APP_COMMON_SRC_DIR)/$(APP_ZPSCFG) $(PDUMCONFIG)
 	$(info Configuring the PDUM ...)
@@ -324,21 +327,21 @@ $(APP_BLD_DIR)/%.o: %.c
 	$(CC) -c -o $(subst Source,Build,$@) $(CFLAGS) $(INCFLAGS) $< -MD -MF $(APP_BLD_DIR)/$*.d -MP
 	@echo
 
-$(APP_BLD_DIR)/$(TARGET)$(TARGET_FEATURES)$(TARGET_HARDWARE).elf: $(APPOBJS) $(addsuffix.a,$(addprefix $(COMPONENTS_BASE_DIR)/Library/lib,$(APPLDLIBS))) 
+$(APP_BLD_DIR)/$(APP_BLD_NAME)$(TARGET_HARDWARE)_$(APP_BLD_DATE).elf: $(APPOBJS) $(addsuffix.a,$(addprefix $(COMPONENTS_BASE_DIR)/Library/lib,$(APPLDLIBS))) 
 	$(info Linking $@ ...)
-	$(CC) -Wl,--gc-sections -Wl,-u_AppColdStart -Wl,-u_AppWarmStart $(LDFLAGS) -L $(SDK_BASE_DIR)/Stack/ZCL/Build/ -T$(ZNCLKCMD) -o $@ -Wl,--start-group $(APPOBJS) $(addprefix -l,$(LDLIBS)) -lm -Wl,--end-group -Wl,-Map,$(TARGET)$(TARGET_FEATURES)$(TARGET_HARDWARE).map 
+	$(CC) -Wl,--gc-sections -Wl,-u_AppColdStart -Wl,-u_AppWarmStart $(LDFLAGS) -L $(SDK_BASE_DIR)/Stack/ZCL/Build/ -T$(ZNCLKCMD) -o $@ -Wl,--start-group $(APPOBJS) $(addprefix -l,$(LDLIBS)) -lm -Wl,--end-group -Wl,-Map,$(APP_BLD_NAME)$(TARGET_HARDWARE)_$(APP_BLD_DATE).map 
 	$(SIZE) $@ 
-	date +%c >> $(APP_BASE)/Doc/size.txt
-	$(SIZE) $@ >> $(APP_BASE)/Doc/size.txt
+	date +%c >> $(APP_BASE)/size.txt
+	$(SIZE) $@ >> $(APP_BASE)/size.txt
 
-$(APP_BLD_DIR)/$(TARGET)$(TARGET_FEATURES)$(TARGET_HARDWARE).bin: $(APP_BLD_DIR)/$(TARGET)$(TARGET_FEATURES)$(TARGET_HARDWARE).elf
+$(APP_BLD_DIR)/$(APP_BLD_NAME)$(TARGET_HARDWARE)_$(APP_BLD_DATE).bin: $(APP_BLD_DIR)/$(APP_BLD_NAME)$(TARGET_HARDWARE)_$(APP_BLD_DATE).elf
 	$(info Generating binary ...)
 	$(OBJCOPY) -j .version -j .bir -j .flashheader -j .vsr_table -j .vsr_handlers -j .rodata -j .text -j .data -j .bss -j .heap -j .stack -S -O binary $< $@
 
 ###############################################################################
 
 clean:
-	rm -f $(APPOBJS) $(APPDEPS) $(TARGET)$(TARGET_FEATURES)$(TARGET_HARDWARE).bin $(TARGET)$(TARGET_FEATURES)$(TARGET_HARDWARE).elf $(TARGET)$(TARGET_FEATURES)$(TARGET_HARDWARE).map
+	rm -f $(APPOBJS) $(APPDEPS) $(APP_BLD_NAME)$(TARGET_HARDWARE)_$(APP_BLD_DATE).bin $(APP_BLD_NAME)$(TARGET_HARDWARE)_$(APP_BLD_DATE).elf $(APP_BLD_NAME)$(TARGET_HARDWARE)_$(APP_BLD_DATE).map
 	rm -f $(APP_SRC_DIR)/pdum_gen.* $(APP_SRC_DIR)/zps_gen*.*
 
 ###############################################################################

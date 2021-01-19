@@ -2,7 +2,7 @@
 <?fileVersion 4.0.0?><cproject>
 	<storageModule moduleId="org.eclipse.cdt.core.settings">
 		<cconfiguration id="0.876190861.1781733102.485851044.754392318">
-			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="0.876190861.1781733102.485851044.754392318" moduleId="org.eclipse.cdt.core.settings" name="Router, JN5169, DR1175">
+			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="0.876190861.1781733102.485851044.754392318" moduleId="org.eclipse.cdt.core.settings" name="Lumi-Router-JN5169">
 				<externalSettings/>
 				<extensions>
 					<extension id="org.eclipse.cdt.core.GCCErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
@@ -14,7 +14,7 @@
 				</extensions>
 			</storageModule>
 			<storageModule moduleId="cdtBuildSystem" version="4.0.0">
-				<configuration artifactName="JN-AN-1133-ZigBee-Pro-Lightswitch" buildProperties="" description="" id="0.876190861.1781733102.485851044.754392318" name="Router, JN5169, DR1175" parent="org.eclipse.cdt.build.core.prefbase.cfg">
+				<configuration artifactName="JN-AN-1133-ZigBee-Pro-Lightswitch" buildProperties="" description="" id="0.876190861.1781733102.485851044.754392318" name="Lumi-Router-JN5169" parent="org.eclipse.cdt.build.core.prefbase.cfg">
 					<folderInfo id="0.876190861.1781733102.485851044.754392318." name="/" resourcePath="">
 						<toolChain id="com.beyondsemi.toolchain.gnu.ba.elf.base.1954708394" name="BA ELF GNU toolchain" superClass="com.beyondsemi.toolchain.gnu.ba.elf.base">
 							<targetPlatform binaryParser="org.eclipse.cdt.core.ELF" id="com.beyondsemi.target.gnu.platform.ba.elf.1530889585" superClass="com.beyondsemi.target.gnu.platform.ba.elf"/>
@@ -54,7 +54,7 @@
 	<storageModule moduleId="refreshScope" versionNumber="2">
 		<configuration configurationName="Coordinator_OnOffLightSwitch"/>
 		<configuration configurationName="Coordinator USB Dongle">
-			<resource resourceType="PROJECT" workspacePath="/JN-AN-1217-Zigbee-3-0-Base-Device"/>
+			<resource resourceType="PROJECT" workspacePath="/Lumi-Router-JN5169"/>
 		</configuration>
 		<configuration configurationName="OTA Client DimmerSwitch">
 			<resource resourceType="PROJECT" workspacePath="/ZSL-Test-App"/>
@@ -70,14 +70,14 @@
 			<resource resourceType="PROJECT" workspacePath="/ZSL-Test-App"/>
 		</configuration>
 		<configuration configurationName="Coordinator_Switch">
-			<resource resourceType="PROJECT" workspacePath="/JN-AN-1217-Zigbee-3-0-Base-Device"/>
+			<resource resourceType="PROJECT" workspacePath="/Lumi-Router-JN5169"/>
 		</configuration>
 		<configuration configurationName="EndDevice_OnOffLightSwitch"/>
 		<configuration configurationName="ColorTempTunableWhiteLight">
 			<resource resourceType="PROJECT" workspacePath="/ZSL-Test-App"/>
 		</configuration>
 		<configuration configurationName="Router_OnOffLight">
-			<resource resourceType="PROJECT" workspacePath="/JN-AN-1217-Zigbee-3-0-Base-Device"/>
+			<resource resourceType="PROJECT" workspacePath="/Lumi-Router-JN5169"/>
 		</configuration>
 		<configuration configurationName="DimmableLight 3">
 			<resource resourceType="PROJECT" workspacePath="/ZSL-Test-App"/>

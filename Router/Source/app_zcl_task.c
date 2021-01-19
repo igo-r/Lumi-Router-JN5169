@@ -566,8 +566,8 @@ PRIVATE void APP_vZCL_DeviceSpecific_Init(void)
 {
     sBaseDevice.sOnOffServerCluster.bOnOff = FALSE;
     memcpy(sBaseDevice.sBasicServerCluster.au8ManufacturerName, "NXP", CLD_BAS_MANUF_NAME_SIZE);
-    memcpy(sBaseDevice.sBasicServerCluster.au8ModelIdentifier, "BDB-Router", CLD_BAS_MODEL_ID_SIZE);
-    memcpy(sBaseDevice.sBasicServerCluster.au8DateCode, "20150212", CLD_BAS_DATE_SIZE);
+    memcpy(sBaseDevice.sBasicServerCluster.au8ModelIdentifier, "openlumi.gw_router.jn5169", CLD_BAS_MODEL_ID_SIZE);
+    memcpy(sBaseDevice.sBasicServerCluster.au8DateCode, "20150219", CLD_BAS_DATE_SIZE);
     memcpy(sBaseDevice.sBasicServerCluster.au8SWBuildID, "1000-0001", CLD_BAS_SW_BUILD_SIZE);
 }
 

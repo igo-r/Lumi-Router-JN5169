@@ -1,0 +1,36 @@
+Mon Sep 10 21:16:03 2018
+   text	   data	    bss	    dec	    hex	filename
+ 153409	   2784	  24749	 180942	  2c2ce	c:/NXP/bstudio_nxp/workspace/JN-AN-1217-Zigbee-3-0-Base-Device/Coordinator/Build/Coordinator_JN5169_DR1199.elf
+Mon Sep 10 21:16:51 2018
+   text	   data	    bss	    dec	    hex	filename
+ 146610	   1592	  22797	 170999	  29bf7	c:/NXP/bstudio_nxp/workspace/JN-AN-1217-Zigbee-3-0-Base-Device/EndDevice/Build/EndDevice_NtagIcode_JN5169_DR1199.elf
+Mon Sep 10 21:18:07 2018
+   text	   data	    bss	    dec	    hex	filename
+ 153390	   1388	  23001	 177779	  2b673	c:/NXP/bstudio_nxp/workspace/JN-AN-1217-Zigbee-3-0-Base-Device/Router/Build/Router_NtagIcode_JN5169_DR1175.elf
+Mon Sep 10 21:19:20 2018
+   text	   data	    bss	    dec	    hex	filename
+ 153341	   2784	  24765	 180890	  2c29a	c:/NXP/bstudio_nxp/workspace/JN-AN-1217-Zigbee-3-0-Base-Device/Coordinator/Build/Coordinator_JN5169_DONGLE.elf
+Mon Sep 17 22:03:30 2018
+   text	   data	    bss	    dec	    hex	filename
+ 153409	   2784	  24749	 180942	  2c2ce	c:/NXP/bstudio_nxp/workspace/JN-AN-1217-Zigbee-3-0-Base-Device/Coordinator/Build/Coordinator_JN5169_DR1199.elf
+Mon Sep 17 22:04:33 2018
+   text	   data	    bss	    dec	    hex	filename
+ 146610	   1592	  22797	 170999	  29bf7	c:/NXP/bstudio_nxp/workspace/JN-AN-1217-Zigbee-3-0-Base-Device/EndDevice/Build/EndDevice_NtagIcode_JN5169_DR1199.elf
+Mon Sep 17 22:05:54 2018
+   text	   data	    bss	    dec	    hex	filename
+ 153390	   1388	  23001	 177779	  2b673	c:/NXP/bstudio_nxp/workspace/JN-AN-1217-Zigbee-3-0-Base-Device/Router/Build/Router_NtagIcode_JN5169_DR1175.elf
+Mon Sep 17 22:07:09 2018
+   text	   data	    bss	    dec	    hex	filename
+ 153341	   2784	  24765	 180890	  2c29a	c:/NXP/bstudio_nxp/workspace/JN-AN-1217-Zigbee-3-0-Base-Device/Coordinator/Build/Coordinator_JN5169_DONGLE.elf
+Mon Sep 17 22:13:22 2018
+   text	   data	    bss	    dec	    hex	filename
+ 161420	   3232	  24837	 189489	  2e431	c:/NXP/LPCXpresso_7.9.2_493/lpcxpresso/workspace/JN-AN-1217-Zigbee-3-0-Base-Device/Coordinator/Build/Coordinator_JN5179_DR1199.elf
+Mon Sep 17 22:14:19 2018
+   text	   data	    bss	    dec	    hex	filename
+ 161240	   3232	  24837	 189309	  2e37d	c:/NXP/LPCXpresso_7.9.2_493/lpcxpresso/workspace/JN-AN-1217-Zigbee-3-0-Base-Device/Coordinator/Build/Coordinator_JN5179_DONGLE.elf
+Mon Sep 17 22:15:17 2018
+   text	   data	    bss	    dec	    hex	filename
+ 162256	   1840	  23081	 187177	  2db29	c:/NXP/LPCXpresso_7.9.2_493/lpcxpresso/workspace/JN-AN-1217-Zigbee-3-0-Base-Device/Router/Build/Router_NtagIcode_JN5179_DR1175.elf
+Mon Sep 17 22:16:14 2018
+   text	   data	    bss	    dec	    hex	filename
+ 142796	   1984	  22801	 167581	  28e9d	c:/NXP/LPCXpresso_7.9.2_493/lpcxpresso/workspace/JN-AN-1217-Zigbee-3-0-Base-Device/EndDevice/Build/EndDevice_NtagIcode_JN5179_DR1199.elf

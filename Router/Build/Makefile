@@ -39,26 +39,16 @@ TARGET = Router
 
 # Default target device is the JN5169
 
-JENNIC_CHIP ?= JN5179
-JENNIC_CHIP_FAMILY ?=JN517x
-JENNIC_PCB             ?= DEVKIT5
+JENNIC_CHIP ?= JN5169
+JENNIC_CHIP_FAMILY ?=JN516x
+JENNIC_PCB             ?= DEVKIT4
  
 STACK_SIZE = 5000
 MINIMUM_HEAP_SIZE = 2000
 
-ifeq ($(JENNIC_CHIP_FAMILY), JN517x)
-JENNIC_SDK              = JN-SW-4270
-ZNCLKCMD                = AppBuildZBPro.ld
-JENNIC_PCB              = DEVKIT5
-ENDIAN                  = LITTLE_ENDIAN_PROCESSOR
-DISABLE_LTO             = 1
-endif
-ifeq ($(JENNIC_CHIP_FAMILY), JN516x)
 JENNIC_SDK              = JN-SW-4170
 ZNCLKCMD                = AppBuildZBPro.ld
-JENNIC_PCB              = DEVKIT4
 ENDIAN 	                = BIG_ENDIAN
-endif
 
 ###############################################################################
 # Network settings
@@ -72,8 +62,6 @@ CFLAGS         += -DSINGLE_CHANNEL=$(SINGLE_CHANNEL)
 
 ###############################################################################
 # Default DK4 development kit target hardware
-
-JENNIC_PCB ?= DEVKIT4
 
 DR ?= DR1175
 CFLAGS  += -DBUTTON_MAP_$(DR)
@@ -162,11 +150,6 @@ ifeq ($(ICODES), 1)
 CFLAGS  += -DBDB_JOIN_USES_INSTALL_CODE_KEY=1
 endif
 
-ifeq ($(JENNIC_CHIP_FAMILY),JN517x)
-INTERRUPT_HANDLER_BBC = zps_isrMAC
-LDFLAGS += -Wl,-u$(INTERRUPT_HANDLER_BBC) -Wl,-defsym,vAHI_IntHandlerBbc_select=$(INTERRUPT_HANDLER_BBC)
-endif
-
 ###############################################################################
 # Path definitions
 
@@ -183,14 +166,9 @@ HW_SRC_DIR			= $(COMPONENTS_BASE_DIR)/HardwareAPI/Source
 
 # Note: Path to source file is found using vpath below, so only .c filename is required
 APPSRC = app_main.c
-ifeq ($(JENNIC_CHIP_FAMILY), JN517x)
-APPSRC += port_JN517x.c
-endif
-ifeq ($(JENNIC_CHIP_FAMILY), JN516x)
 APPSRC += irq_JN516x.S
 APPSRC += portasm_JN516x.S
 APPSRC += port_JN516x.c
-endif
 
 APPSRC += pdum_gen.c
 APPSRC += pdum_apdu.S
@@ -200,12 +178,7 @@ APPSRC += app_router_node.c
 APPSRC += app_zcl_task.c
 APPSRC += app_buttons.c
 APPSRC += app_led_interface.c
-ifeq ($(JENNIC_CHIP_FAMILY), JN516x)
 #APPSRC += StackMeasure.c
-endif
-ifeq ($(JENNIC_CHIP_FAMILY), JN517x)
-APPSRC += AHI_ModuleConfiguration.c 
-endif
 ifeq ($(APP_NTAG_ICODE),1)
 APPSRC += app_ntag_icode.c
 #APPSRC += app_icode.c
@@ -329,21 +302,6 @@ vpath % $(APP_SRC_DIR):$(APP_COMMON_SRC_DIR):$(ZCL_SRC_DIRS):$(ZCL_SRC):$(BDB_SR
 
 all: $(APP_BLD_DIR)/$(TARGET)$(TARGET_FEATURES)$(TARGET_HARDWARE).bin
 
-ifeq ($(JENNIC_CHIP_FAMILY),JN517x)
-$(APP_SRC_DIR)/pdum_gen.c $(APP_SRC_DIR)/pdum_gen.h: $(APP_COMMON_SRC_DIR)/$(APP_ZPSCFG) $(PDUMCONFIG)
-	$(info Configuring the PDUM ...)
-	$(PDUMCONFIG) -z $(TARGET) -e $(ENDIAN) -f $< -o $(APP_SRC_DIR)
-	@echo
-
-$(APP_SRC_DIR)/zps_gen.c $(APP_SRC_DIR)/zps_gen.h: $(APP_COMMON_SRC_DIR)/$(APP_ZPSCFG) $(ZPSCONFIG)
-	$(info Configuring the Zigbee Protocol Stack ...)
-	$(ZPSCONFIG) -n $(TARGET) -t $(JENNIC_CHIP) -l $(ZPS_NWK_LIB) -a $(ZPS_APL_LIB) -c $(TOOL_COMMON_BASE_DIR)/$(TOOLCHAIN_PATH) -e $(ENDIAN) -f $< -o $(APP_SRC_DIR)
-	
-$(APP_BLD_DIR)/pdum_gen.o: CFLAGS += -fno-lto
-$(APP_BLD_DIR)/zps_gen.o: CFLAGS += -fno-lto
-endif	
-
-ifeq ($(JENNIC_CHIP_FAMILY),JN516x)
 $(APP_SRC_DIR)/pdum_gen.c $(APP_SRC_DIR)/pdum_gen.h: $(APP_COMMON_SRC_DIR)/$(APP_ZPSCFG) $(PDUMCONFIG)
 	$(info Configuring the PDUM ...)
 	$(PDUMCONFIG) -z $(TARGET) -f $< -o $(APP_SRC_DIR)
@@ -355,7 +313,6 @@ $(APP_SRC_DIR)/zps_gen.c $(APP_SRC_DIR)/zps_gen.h: $(APP_COMMON_SRC_DIR)/$(APP_Z
 	
 $(APP_BLD_DIR)/pdum_gen.o: CFLAGS += -fno-lto
 $(APP_BLD_DIR)/zps_gen.o: CFLAGS += -fno-lto
-endif
 
 $(APP_BLD_DIR)/%.o: %.S
 	$(info Assembling $< ...)
@@ -374,15 +331,9 @@ $(APP_BLD_DIR)/$(TARGET)$(TARGET_FEATURES)$(TARGET_HARDWARE).elf: $(APPOBJS) $(a
 	date +%c >> $(APP_BASE)/Doc/size.txt
 	$(SIZE) $@ >> $(APP_BASE)/Doc/size.txt
 
-ifeq ($(JENNIC_CHIP_FAMILY),JN517x)
-$(APP_BLD_DIR)/$(TARGET)$(TARGET_FEATURES)$(TARGET_HARDWARE).bin: $(APP_BLD_DIR)/$(TARGET)$(TARGET_FEATURES)$(TARGET_HARDWARE).elf
-	$(info Generating binary ...)
-	$(OBJCOPY) -S -O binary $< $@
-else
 $(APP_BLD_DIR)/$(TARGET)$(TARGET_FEATURES)$(TARGET_HARDWARE).bin: $(APP_BLD_DIR)/$(TARGET)$(TARGET_FEATURES)$(TARGET_HARDWARE).elf
 	$(info Generating binary ...)
 	$(OBJCOPY) -j .version -j .bir -j .flashheader -j .vsr_table -j .vsr_handlers -j .rodata -j .text -j .data -j .bss -j .heap -j .stack -S -O binary $< $@
-endif
 
 ###############################################################################
 

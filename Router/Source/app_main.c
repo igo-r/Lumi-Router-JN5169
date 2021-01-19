@@ -80,11 +80,6 @@
 #define MCPS_QUEUE_SIZE             20
 #define MCPS_DCFM_QUEUE_SIZE 		5
 
-#if JENNIC_CHIP_FAMILY == JN517x
-#define NVIC_INT_PRIO_LEVEL_SYSCTRL (13)
-#define NVIC_INT_PRIO_LEVEL_BBC     (7)
-#endif
-
 /****************************************************************************/
 /***        Type Definitions                                              ***/
 /****************************************************************************/
@@ -124,10 +119,6 @@ PRIVATE MAC_tsMcpsVsCfmData asMacMcpsDcfm[MCPS_DCFM_QUEUE_SIZE];
 /****************************************************************************/
 /***        Exported Functions                                            ***/
 /****************************************************************************/
-#if (JENNIC_CHIP_FAMILY == JN517x)
-extern void vISR_SystemController(uint32 u32DeviceId, uint32 u32BitMap);
-extern PUBLIC void APP_isrUart (uint32 u32Device, uint32 u32ItemBitmap);
-#endif
 extern void zps_taskZPS(void);
 extern void PWRM_vManagePower(void);
 
@@ -186,19 +177,10 @@ PUBLIC void APP_vMainLoop(void)
  ****************************************************************************/
 PUBLIC void APP_vSetUpHardware(void)
 {
-#if (JENNIC_CHIP_FAMILY == JN517x)
-    vAHI_SysCtrlRegisterCallback ( vISR_SystemController );
-    u32AHI_Init();
-    vAHI_InterruptSetPriority ( MICRO_ISR_MASK_BBC,        NVIC_INT_PRIO_LEVEL_BBC );
-    vAHI_InterruptSetPriority ( MICRO_ISR_MASK_SYSCTRL, NVIC_INT_PRIO_LEVEL_SYSCTRL );
-#endif
-
-#if (JENNIC_CHIP_FAMILY == JN516x)
     TARGET_INITIALISE();
     /* clear interrupt priority level  */
     SET_IPL(0);
     portENABLE_INTERRUPTS();
-#endif
 }
 
 /****************************************************************************

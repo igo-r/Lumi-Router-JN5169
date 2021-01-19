@@ -65,9 +65,6 @@
 #include "zcl_options.h"
 #include "zcl.h"
 #include "app_reporting.h"
-#ifdef JN517x
-#include "AHI_ModuleConfiguration.h"
-#endif
 #ifdef APP_NTAG_ICODE
 #include "app_ntag_icode.h"
 #include "nfc_nwk.h"
@@ -202,10 +199,6 @@ PUBLIC void APP_vInitialiseRouter(void)
        eStatusReportReload = eRestoreReports();
 
        ZPS_u32MacSetTxBuffers  (4);
-#ifdef JN517x
-    /* Default module configuration: change E_MODULE_DEFAULT as appropriate */
-      vAHI_ModuleConfigure(E_MODULE_DEFAULT);
-#endif
 
     /* Initialise ZBPro stack */
     ZPS_eAplAfInit();

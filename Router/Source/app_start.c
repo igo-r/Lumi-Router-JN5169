@@ -114,14 +114,11 @@ extern void *_stack_low_water_mark;
  ****************************************************************************/
 PUBLIC void vAppMain(void)
 {
-
-#if JENNIC_CHIP_FAMILY == JN516x
     /* Wait until FALSE i.e. on XTAL - otherwise UART data will be at wrong speed */
     while (bAHI_GetClkSource() == TRUE);
 
     /* Move CPU to 32 MHz  vAHI_OptimiseWaitStates automatically called */
     bAHI_SetClockRate(3);
-#endif
 
     /* Initialise the debug diagnostics module to use UART0 at 115K Baud;
      * Do not use UART 1 if LEDs are used, as it shares DIO with the LEDS */
@@ -134,12 +131,10 @@ PUBLIC void vAppMain(void)
     }
     #endif
 
-#if (JENNIC_CHIP_FAMILY == JN516x)
     /* Initialise the stack overflow exception to trigger if the end of the
      * stack is reached. See the linker command file to adjust the allocated
      * stack size. */
     vAHI_SetStackOverflow(TRUE, (uint32)&_stack_low_water_mark);
-#endif
 
     /* Catch resets due to watchdog timer expiry. Comment out to harden code. */
     if (bAHI_WatchdogResetEvent())

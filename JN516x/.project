@@ -85,16 +85,6 @@
 			<location>C:/NXP/bstudio_nxp/workspace/JN-AN-1217-Zigbee-3-0-Base-Device/Common</location>
 		</link>
 		<link>
-			<name>Coordinator</name>
-			<type>2</type>
-			<location>C:/NXP/bstudio_nxp/workspace/JN-AN-1217-Zigbee-3-0-Base-Device/Coordinator</location>
-		</link>
-		<link>
-			<name>EndDevice</name>
-			<type>2</type>
-			<location>C:/NXP/bstudio_nxp/workspace/JN-AN-1217-Zigbee-3-0-Base-Device/EndDevice</location>
-		</link>
-		<link>
 			<name>Router</name>
 			<type>2</type>
 			<location>C:/NXP/bstudio_nxp/workspace/JN-AN-1217-Zigbee-3-0-Base-Device/Router</location>

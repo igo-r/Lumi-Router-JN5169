@@ -1,0 +1,13 @@
+Router/Build/*.d
+Router/Build/*.o
+Router/Build/*.elf
+Router/Build/*.bin
+Router/Build/*.map
+Router/Build/*.json
+Router/Source/zps_gen.*
+Router/Source/pdum_apdu.S
+Router/Source/pdum_gen.*
+size.txt
+
+# MacOS indexing file
+.DS_Store

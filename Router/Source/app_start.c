@@ -66,6 +66,10 @@
     #define TRACE_APP   FALSE
 #endif
 
+#ifndef UART_DEBUGGING
+    #define UART_DEBUGGING  FALSE
+#endif
+
 #define HALT_ON_EXCEPTION   FALSE
 
 /****************************************************************************/
@@ -114,14 +118,9 @@ PUBLIC void vAppMain(void)
 
     /* Initialise the debug diagnostics module to use UART0 at 115K Baud;
      * Do not use UART 1 if LEDs are used, as it shares DIO with the LEDS */
-    DBG_vUartInit(DBG_E_UART_0, DBG_E_UART_BAUD_RATE_115200);
-    #ifdef DEBUG_921600
-    {
-        /* Bump baud rate up to 921600 */
-        vAHI_UartSetBaudDivisor(DBG_E_UART_0, 2);
-        vAHI_UartSetClocksPerBit(DBG_E_UART_0, 8);
-    }
-    #endif
+#if (UART_DEBUGGING == TRUE)
+    DBG_vUartInit(DEBUG_UART, DBG_E_UART_BAUD_RATE_115200);
+#endif
 
     /* Initialise the stack overflow exception to trigger if the end of the
      * stack is reached. See the linker command file to adjust the allocated

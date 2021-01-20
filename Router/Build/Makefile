@@ -93,20 +93,31 @@ BDB_SUPPORT_FIND_AND_BIND_TARGET ?= 1
 # Debug options define DEBUG either HW or SW
 #DEBUG ?=SW
 #DEBUG ?=HW
-#
+DEBUG ?= UART1
+
 # Define which UART to use for HW debug
-#DEBUG_PORT ?= UART1
 #  DEBUG_MODE  ?=  SWD    # For ARM core
 
+ifeq ($(DEBUG), UART0)
+$(info Building with debug UART0..)
+DEBUG_PORT ?= UART0
+CFLAGS  += -DUART_DEBUGGING
+CFLAGS  += -DDEBUG_UART=DBG_E_UART_0
+endif
+ifeq ($(DEBUG), UART1)
+$(info Building with debug UART1..)
+DEBUG_PORT ?= UART1
+CFLAGS  += -DUART_DEBUGGING
+CFLAGS  += -DDEBUG_UART=DBG_E_UART_1
+endif
 ###############################################################################
 # Define TRACE to use with DBG module
 TRACE ?=1
 ifeq ($(TRACE), 1)
 CFLAGS += -DDBG_ENABLE
-#CFLAGS += -DDEBUG_921600
 
 # Enable any debug output here:
-#CFLAGS += -DDEBUG_APP
+CFLAGS += -DDEBUG_APP
 CFLAGS += -DDEBUG_APP_BDB
 CFLAGS += -DDEBUG_APP_EVENT
 #CFLAGS += -DDEBUG_BDB

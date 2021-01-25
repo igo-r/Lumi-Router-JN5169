@@ -12,7 +12,7 @@ This instruction assumes that an alternative OpenWRT firmware is already install
 2. Issue the following commands in the command line.
 
 ```shell
-wget https://github.com/igo-r/Lumi-Router-JN5169/releases/download/2021.1.20/Lumi_Router_JN5169_20210120.bin -O /tmp/Lumi_Router.bin 
+wget https://github.com/igo-r/Lumi-Router-JN5169/releases/latest/download/Lumi_Router_JN5169_20210125.bin -O /tmp/Lumi_Router.bin 
 jnflash /tmp/Lumi_Router.bin
 ```
 

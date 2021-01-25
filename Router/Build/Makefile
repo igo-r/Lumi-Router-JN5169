@@ -35,7 +35,7 @@
 TARGET = Router
 
 APP_BLD_NAME = Lumi_Router
-APP_BLD_DATE = 20210120
+APP_BLD_DATE = 20210125
 
 ###############################################################################
 #User definable make parameters that may be overwritten from the command line

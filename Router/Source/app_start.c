@@ -54,6 +54,7 @@
 #include "zcl_options.h"
 #include "app_common.h"
 #include "app_main.h"
+#include "uart.h"
 #include "portmacro.h"
 
 /****************************************************************************/
@@ -203,6 +204,9 @@ PRIVATE void APP_vInitialise(void)
 
     /* Initialise Protocol Data Unit Manager */
     PDUM_vInit();
+
+    UART_vInit();
+    UART_vRtsStartFlow();
 
     ZPS_vExtendedStatusSetCallback(vfExtendedStatusCallBack);
 

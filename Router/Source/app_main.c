@@ -50,6 +50,7 @@
 #include "app_zcl_task.h"
 #include "PDM.h"
 #include "app_router_node.h"
+#include "app_serial_commands.h"
 
 /****************************************************************************/
 /***        Macro Definitions                                             ***/
@@ -69,6 +70,9 @@
 #define MCPS_QUEUE_SIZE             20
 #define MCPS_DCFM_QUEUE_SIZE 		5
 
+#define TX_QUEUE_SIZE               150
+#define RX_QUEUE_SIZE               150
+
 /****************************************************************************/
 /***        Type Definitions                                              ***/
 /****************************************************************************/
@@ -83,8 +87,14 @@
 
 PUBLIC uint8 u8TimerZCL;
 
+PUBLIC uint8 u8TmrRestart;
+PUBLIC bool_t bResetIssued = FALSE;
+
 PUBLIC tszQueue APP_msgBdbEvents;
 PUBLIC tszQueue APP_msgAppEvents;
+
+PUBLIC tszQueue APP_msgSerialTx;
+PUBLIC tszQueue APP_msgSerialRx;
 
 /****************************************************************************/
 /***        Local Variables                                               ***/
@@ -99,7 +109,8 @@ PRIVATE MAC_tsMlmeVsDcfmInd asMacMlmeVsDcfmInd[MLME_QUEQUE_SIZE];
 PRIVATE zps_tsTimeEvent     asTimeEvent[TIMER_QUEUE_SIZE];
 PRIVATE MAC_tsMcpsVsCfmData asMacMcpsDcfm[MCPS_DCFM_QUEUE_SIZE];
 
-
+uint8               au8TxBuffer[TX_QUEUE_SIZE];
+uint8               au8RxBuffer[RX_QUEUE_SIZE];
 
 /****************************************************************************/
 /***        Exported Functions                                            ***/
@@ -134,6 +145,9 @@ PUBLIC void APP_vMainLoop(void)
 
         DBG_vPrintf(FALSE, "APP: Entering APP_taskRouter\n");
         APP_taskRouter();
+
+        DBG_vPrintf(FALSE, "APP: Entering APP_taskAtSerial\n");
+        APP_taskAtSerial();
 
         /* Re-load the watch-dog timer. Execution must return through the idle
          * task before the CPU is suspended by the power manager. This ensures
@@ -170,6 +184,26 @@ PUBLIC void APP_vSetUpHardware(void)
 
 /****************************************************************************
  *
+ * NAME: APP_cbRestart
+ *
+ * DESCRIPTION:
+ * Restart
+ *
+ * RETURNS:
+ * void
+ *
+ ****************************************************************************/
+PUBLIC void APP_cbRestart(void *pvParam)
+{
+    if(bResetIssued)
+    {
+        vAHI_SwReset();
+        bResetIssued =  FALSE;
+    }
+}
+
+/****************************************************************************
+ *
  * NAME: APP_vInitResources
  *
  * DESCRIPTION:
@@ -186,6 +220,7 @@ PUBLIC void APP_vInitResources(void)
 
     /* Create Z timers */
     ZTIMER_eOpen(&u8TimerZCL,          APP_cbTimerZclTick,      NULL, ZTIMER_FLAG_PREVENT_SLEEP);
+    ZTIMER_eOpen(&u8TmrRestart,        APP_cbRestart,           NULL, ZTIMER_FLAG_PREVENT_SLEEP);
 
     /* Create all the queues */
     ZQ_vQueueCreate(&APP_msgAppEvents,     APP_QUEUE_SIZE,     sizeof(APP_tsEvent),        (uint8*)asAppEvent);
@@ -195,6 +230,8 @@ PUBLIC void APP_vInitResources(void)
     ZQ_vQueueCreate(&zps_msgMcpsDcfm,      MCPS_DCFM_QUEUE_SIZE, sizeof(MAC_tsMcpsVsCfmData),(uint8*)asMacMcpsDcfm);
     ZQ_vQueueCreate(&zps_TimeEvents,       TIMER_QUEUE_SIZE,   sizeof(zps_tsTimeEvent),    (uint8*)asTimeEvent);
 
+    ZQ_vQueueCreate(&APP_msgSerialTx,      TX_QUEUE_SIZE,   sizeof(uint8),    (uint8*)au8TxBuffer);
+    ZQ_vQueueCreate(&APP_msgSerialRx,      RX_QUEUE_SIZE,   sizeof(uint8),    (uint8*)au8RxBuffer);
 }
 
 /****************************************************************************/

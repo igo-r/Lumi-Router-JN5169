@@ -23,7 +23,7 @@ PIC_ChannelPriorities:
     .byte 7                 # MAC priority
     .byte 0                 # AES priority
     .byte 0                 # PHY priority
-    .byte 0                 # uart0 priority
+    .byte 5                 # uart0 priority
     .byte 0                 # uart1 priority
     .byte 0                 # timer0 priority
     .byte 0                 # spi slave priority
@@ -39,6 +39,7 @@ PIC_ChannelPriorities:
     .section .text,"ax"
     .extern zps_isrMAC
     .extern ISR_vTickTimer
+    .extern APP_isrUart
     .align 4
     .type   PIC_SwVectTable, @object
     .size   PIC_SwVectTable, 64
@@ -48,7 +49,7 @@ PIC_SwVectTable:
     .word vUnclaimedInterrupt               # 2
     .word vUnclaimedInterrupt               # 3
     .word vUnclaimedInterrupt               # 4
-    .word vUnclaimedInterrupt               # 5
+    .word APP_isrUart                       # 5
     .word vUnclaimedInterrupt               # 6
     .word zps_isrMAC                        # 7
     .word vUnclaimedInterrupt               # 8

@@ -63,6 +63,7 @@
 #include "zcl_options.h"
 #include "zcl.h"
 #include "app_reporting.h"
+#include "app_serial_commands.h"
 
 /****************************************************************************/
 /***        Macro Definitions                                             ***/
@@ -224,7 +225,7 @@ PUBLIC void APP_vInitialiseRouter(void)
     vPrintAPSTable();
 #endif
 
-
+    APP_WriteMessageToSerial("Router started..");
 }
 
 /****************************************************************************

@@ -2,9 +2,9 @@
  *
  * MODULE:             JN-AN-1217
  *
- * COMPONENT:          app_main.h
+ * COMPONENT:          app_serial_commands.h
  *
- * DESCRIPTION:
+ * DESCRIPTION:        Base Device Serial Commands: Coordinator application
  *
  ****************************************************************************
  *
@@ -28,63 +28,50 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
- * Copyright NXP B.V. 2017. All rights reserved
+ * Copyright NXP B.V. 2016. All rights reserved
  *
  ***************************************************************************/
 
-#ifndef APP_MAIN_H
-#define APP_MAIN_H
+#ifndef APP_SERIAL_COMMANDS_H_
+#define APP_SERIAL_COMMANDS_H_
 
-#include "ZQueue.h"
-#include "tsv_pub.h"
-#include "bdb_api.h"
+/****************************************************************************/
+/***        Include files                                                 ***/
+/****************************************************************************/
+
 
 /****************************************************************************/
 /***        Macro Definitions                                             ***/
 /****************************************************************************/
 
+#define SL_START_CHAR          0x01
+#define SL_ESC_CHAR            0x02
+#define SL_END_CHAR            0x03
+
 /****************************************************************************/
 /***        Type Definitions                                              ***/
 /****************************************************************************/
+
+/** Serial link message types */
+typedef enum
+{
+    E_SL_MSG_RESET                                             =   0x0011,
+    E_SL_MSG_ERASE_PERSISTENT_DATA                             =   0x0012,
+} teSL_MsgType;
 
 /****************************************************************************/
 /***        Exported Functions                                            ***/
 /****************************************************************************/
 
-PUBLIC void APP_vInitResources(void);
-PUBLIC void APP_vMainLoop(void);
-PUBLIC void APP_vSetUpHardware(void);
-PUBLIC void APP_cbRestart(void *pvParam);
+PUBLIC void APP_taskAtSerial(void);
+PUBLIC void APP_WriteMessageToSerial(const char *message);
 
 /****************************************************************************/
 /***        External Variables                                            ***/
 /****************************************************************************/
 
-extern PUBLIC uint8 u8TimerZCL;
-
-extern PUBLIC uint8  u8TmrRestart;
-extern PUBLIC bool_t bResetIssued;
-
-extern PUBLIC tszQueue zps_msgMlmeDcfmInd;
-extern PUBLIC tszQueue zps_msgMcpsDcfmInd;
-extern PUBLIC tszQueue zps_msgMcpsDcfm;
-extern PUBLIC tszQueue zps_TimeEvents;
-
-//extern PUBLIC tszQueue APP_msgZpsEvents;
-extern PUBLIC tszQueue APP_msgBdbEvents;
-extern PUBLIC tszQueue APP_msgAppEvents;
-
-extern PUBLIC tszQueue APP_msgSerialTx;
-extern PUBLIC tszQueue APP_msgSerialRx;
-
 /****************************************************************************/
 /****************************************************************************/
 /****************************************************************************/
 
-#endif /* APP_MAIN_H */
-
-
-
-
-
-
+#endif /*APP_SERIAL_COMMANDS_H_*/

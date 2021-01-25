@@ -93,7 +93,7 @@ BDB_SUPPORT_FIND_AND_BIND_TARGET ?= 1
 # Debug options define DEBUG either HW or SW
 #DEBUG ?=SW
 #DEBUG ?=HW
-DEBUG ?= UART1
+DEBUG ?= NONE
 
 # Define which UART to use for HW debug
 #  DEBUG_MODE  ?=  SWD    # For ARM core
@@ -112,7 +112,7 @@ CFLAGS  += -DDEBUG_UART=DBG_E_UART_1
 endif
 ###############################################################################
 # Define TRACE to use with DBG module
-TRACE ?=1
+TRACE ?=0
 ifeq ($(TRACE), 1)
 CFLAGS += -DDBG_ENABLE
 
@@ -120,6 +120,7 @@ CFLAGS += -DDBG_ENABLE
 CFLAGS += -DDEBUG_APP
 CFLAGS += -DDEBUG_APP_BDB
 CFLAGS += -DDEBUG_APP_EVENT
+CFLAGS += -DDEBUG_SERIAL
 #CFLAGS += -DDEBUG_BDB
 CFLAGS += -DNXP_HARDWARE
 #CFLAGS += -DDEBUG_ZCL
@@ -162,9 +163,11 @@ APPSRC += pdum_apdu.S
 APPSRC += zps_gen.c
 APPSRC += app_start.c
 APPSRC += app_router_node.c
+APPSRC += app_serial_commands.c
 APPSRC += app_zcl_task.c
 #APPSRC += StackMeasure.c
 APPSRC += app_reporting.c
+APPSRC += uart.c
 
 APP_ZPSCFG = app.zpscfg
 

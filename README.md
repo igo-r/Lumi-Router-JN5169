@@ -1,10 +1,10 @@
 # Lumi Router (JN5169)
 
-This firmware is a replacement for the original firmware for the Zigbee chip JN5169 on Xiaomi Gateway DGNWG05LM and allows to use the gateway as a router (repeater-like) in any Zigbee network instead of the stock coordinator firmware for the propriate Xiaomi MiHome Network.
+This firmware is a replacement for the original firmware for the __Zigbee__ chip JN5169 on __Xiaomi Gateway DGNWG05LM__ and allows to use the gateway as a router (repeater-like) in any Zigbee network instead of the stock coordinator firmware for the propriate Xiaomi MiHome Network.
 
 ---
 
-This instruction assumes that an alternative OpenWRT firmware is already installed on the gateway. If you have not done this, use the following instruction [https://openlumi.github.io](https://openlumi.github.io)
+This instruction assumes that an alternative __OpenWRT__ firmware is already installed on the gateway. If you have not done this, use the following instruction [https://openlumi.github.io](https://openlumi.github.io)
 
 ## Firmware
 
@@ -23,6 +23,7 @@ Issue the following command in the command line.
 ```shell
 jntool erase_pdm
 ```
+
 After this the device will automatically join.
 
 ## Restart

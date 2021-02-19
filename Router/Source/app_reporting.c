@@ -47,9 +47,11 @@
 #include "app_reporting.h"
 #ifdef CLD_GROUPS
 #include "Groups.h"
-#include "OnOff.h"
 #include "Groups_internal.h"
 #endif
+#include "app_device_temperature.h"
+#include "DeviceTemperatureConfiguration.h"
+
 /****************************************************************************/
 /***        Macro Definitions                                             ***/
 /****************************************************************************/
@@ -62,13 +64,11 @@
 /***        Type Definitions                                              ***/
 /****************************************************************************/
 
-
-/*There are just two attributes at this point - OnOff and CurrentLevel */
-
 /****************************************************************************/
 /***        Local Function Prototypes                                     ***/
 /****************************************************************************/
 
+PRIVATE uint8 u8GetRecordIndex(uint16 u16ClusterID, uint16 u16AttributeEnum);
 
 /****************************************************************************/
 /***        Exported Variables                                            ***/
@@ -78,12 +78,12 @@
 /***        Local Variables                                               ***/
 /****************************************************************************/
 /*Just Two reports for time being*/
-PRIVATE tsReports asSavedReports[NUMBER_OF_REPORTS];
+PRIVATE tsReports asSavedReports[ZCL_NUMBER_OF_REPORTS];
 
 /* define the default reports */
-tsReports asDefaultReports[NUMBER_OF_REPORTS] = \
+tsReports asDefaultReports[ZCL_NUMBER_OF_REPORTS] = \
 {\
-    {GENERAL_CLUSTER_ID_ONOFF, {0, E_ZCL_BOOL, E_CLD_ONOFF_ATTR_ID_ONOFF, MIN_REPORT_INTERVAL,MAX_REPORT_INTERVAL,0,{0}}}
+    {GENERAL_CLUSTER_ID_DEVICE_TEMPERATURE_CONFIGURATION, {0, E_ZCL_INT16, E_CLD_DEVTEMPCFG_ATTR_ID_CURRENT_TEMPERATURE, MIN_REPORT_INTERVAL, MAX_REPORT_INTERVAL, 0, {DEVICE_TEMPERATURE_MINIMUM_REPORTABLE_CHANGE}}}
 };
 
 
@@ -140,7 +140,7 @@ PUBLIC void vMakeSupportedAttributesReportable(void)
 
     DBG_vPrintf(TRACE_REPORT, "MAKE Reportable ep %d\n", ROUTER_APPLICATION_ENDPOINT);
 
-    for(i=0; i<NUMBER_OF_REPORTS; i++)
+    for (i = 0; i < ZCL_NUMBER_OF_REPORTS; i++)
     {
         u16AttributeEnum = asSavedReports[i].sAttributeReportingConfigurationRecord.u16AttributeEnum;
         u16ClusterId = asSavedReports[i].u16ClusterID;
@@ -174,18 +174,17 @@ PUBLIC void vLoadDefaultConfigForReportable(void)
 {
     memset(asSavedReports, 0 ,sizeof(asSavedReports));
     int i;
-    for (i=0; i<NUMBER_OF_REPORTS; i++)
+    for (i = 0; i < ZCL_NUMBER_OF_REPORTS; i++)
     {
         asSavedReports[i] = asDefaultReports[i];
     }
 
 #if TRACE_REPORT
-
-    DBG_vPrintf(TRACE_REPORT,"\nLoaded Defaults Records \n");
-    for(i=0; i <NUMBER_OF_REPORTS; i++)
+    DBG_vPrintf(TRACE_REPORT,"Loaded Defaults Records\n");
+    for (i = 0; i < ZCL_NUMBER_OF_REPORTS; i++)
     {
         DBG_vPrintf(TRACE_REPORT,"Cluster %04x Type %d Attr %04x Min %d Max %d IntV %d Direct %d Change %d\n",
-                asSavedReports[i].u16                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          ID,
+                asSavedReports[i].u16ClusterID,
                 asSavedReports[i].sAttributeReportingConfigurationRecord.eAttributeDataType,
                 asSavedReports[i].sAttributeReportingConfigurationRecord.u16AttributeEnum,
                 asSavedReports[i].sAttributeReportingConfigurationRecord.u16MinimumReportingInterval,
@@ -195,7 +194,6 @@ PUBLIC void vLoadDefaultConfigForReportable(void)
                 asSavedReports[i].sAttributeReportingConfigurationRecord.uAttributeReportableChange.zuint8ReportableChange);
     }
 #endif
-
 
     /*Save this Records*/
     PDM_eSaveRecordData(PDM_ID_APP_REPORTS,
@@ -218,37 +216,33 @@ PUBLIC void vLoadDefaultConfigForReportable(void)
 PUBLIC void vSaveReportableRecord(  uint16 u16ClusterID,
                                     tsZCL_AttributeReportingConfigurationRecord* psAttributeReportingConfigurationRecord)
 {
-    int iIndex;
+    uint8 u8Index = u8GetRecordIndex(u16ClusterID, psAttributeReportingConfigurationRecord->u16AttributeEnum);
 
-    if (u16ClusterID == GENERAL_CLUSTER_ID_ONOFF)
-    {
-        iIndex = REPORT_ONOFF_SLOT;
-        DBG_vPrintf(TRACE_REPORT, "Save to report %d\n", iIndex);
+    if (u8Index == 0xFF)
+        return;
 
-        /*For CurrentLevel attribute in LevelControl Cluster*/
-        asSavedReports[iIndex].u16ClusterID=u16ClusterID;
-        memcpy( &(asSavedReports[iIndex].sAttributeReportingConfigurationRecord),
-                psAttributeReportingConfigurationRecord,
-                sizeof(tsZCL_AttributeReportingConfigurationRecord) );
+    DBG_vPrintf(TRACE_REPORT, "Save to report %d\n", u8Index);
 
-        DBG_vPrintf(TRACE_REPORT,"Cluster %04x Type %d Attrib %04x Min %d Max %d IntV %d Direction %d Change %d\n",
-                asSavedReports[iIndex].u16ClusterID,
-                asSavedReports[iIndex].sAttributeReportingConfigurationRecord.eAttributeDataType,
-                asSavedReports[iIndex].sAttributeReportingConfigurationRecord.u16AttributeEnum,
-                asSavedReports[iIndex].sAttributeReportingConfigurationRecord.u16MinimumReportingInterval,
-                asSavedReports[iIndex].sAttributeReportingConfigurationRecord.u16MaximumReportingInterval,
-                asSavedReports[iIndex].sAttributeReportingConfigurationRecord.u16TimeoutPeriodField,
-                asSavedReports[iIndex].sAttributeReportingConfigurationRecord.u8DirectionIsReceived,
-                asSavedReports[iIndex].sAttributeReportingConfigurationRecord.uAttributeReportableChange.zuint8ReportableChange );
+    /*For CurrentLevel attribute in LevelControl Cluster*/
+    asSavedReports[u8Index].u16ClusterID=u16ClusterID;
+    memcpy( &(asSavedReports[u8Index].sAttributeReportingConfigurationRecord),
+            psAttributeReportingConfigurationRecord,
+            sizeof(tsZCL_AttributeReportingConfigurationRecord) );
 
-        /*Save this Records*/
-        PDM_eSaveRecordData(PDM_ID_APP_REPORTS,
-                            asSavedReports,
-                            sizeof(asSavedReports));
-    }
+    DBG_vPrintf(TRACE_REPORT,"Cluster %04x Type %d Attrib %04x Min %d Max %d IntV %d Direction %d Change %d\n",
+            asSavedReports[u8Index].u16ClusterID,
+            asSavedReports[u8Index].sAttributeReportingConfigurationRecord.eAttributeDataType,
+            asSavedReports[u8Index].sAttributeReportingConfigurationRecord.u16AttributeEnum,
+            asSavedReports[u8Index].sAttributeReportingConfigurationRecord.u16MinimumReportingInterval,
+            asSavedReports[u8Index].sAttributeReportingConfigurationRecord.u16MaximumReportingInterval,
+            asSavedReports[u8Index].sAttributeReportingConfigurationRecord.u16TimeoutPeriodField,
+            asSavedReports[u8Index].sAttributeReportingConfigurationRecord.u8DirectionIsReceived,
+            asSavedReports[u8Index].sAttributeReportingConfigurationRecord.uAttributeReportableChange.zuint8ReportableChange );
 
-
-
+    /*Save this Records*/
+    PDM_eSaveRecordData(PDM_ID_APP_REPORTS,
+                        asSavedReports,
+                        sizeof(asSavedReports));
 }
 
 PRIVATE uint8 u8GetRecordIndex(uint16 u16ClusterID,
@@ -256,14 +250,8 @@ PRIVATE uint8 u8GetRecordIndex(uint16 u16ClusterID,
 {
 	uint8 u8Index = 0xFF;
 
-    if (u16ClusterID == GENERAL_CLUSTER_ID_ONOFF)
-    {
-        u8Index = REPORT_ONOFF_SLOT;
-    }
-    else
-    {
-    	u8Index = 0xFF;
-    }
+    if (u16ClusterID == GENERAL_CLUSTER_ID_DEVICE_TEMPERATURE_CONFIGURATION)
+        u8Index = REPORT_DEVICE_TEMPERATURE_CONFIGURATION_SLOT;
 
 	return u8Index;
 }
@@ -272,10 +260,10 @@ PUBLIC void vRestoreDefaultRecord(  uint8                                       
 									uint16                                       u16ClusterID,
 									tsZCL_AttributeReportingConfigurationRecord* psAttributeReportingConfigurationRecord)
 {
-    uint8 u8Index = u8GetRecordIndex(u16ClusterID,psAttributeReportingConfigurationRecord->u16AttributeEnum);
+    uint8 u8Index = u8GetRecordIndex(u16ClusterID, psAttributeReportingConfigurationRecord->u16AttributeEnum);
 
-    if(u8Index == 0xFF)
-    	return;
+    if (u8Index == 0xFF)
+        return;
 
     eZCL_CreateLocalReport( u8EndPointID, u16ClusterID, 0, TRUE, &(asDefaultReports[u8Index].sAttributeReportingConfigurationRecord));
 
@@ -293,7 +281,7 @@ PUBLIC void vRestoreDefaultRecord(  uint8                                       
             asSavedReports[u8Index].sAttributeReportingConfigurationRecord.u16MaximumReportingInterval,
             asSavedReports[u8Index].sAttributeReportingConfigurationRecord.u16TimeoutPeriodField,
             asSavedReports[u8Index].sAttributeReportingConfigurationRecord.u8DirectionIsReceived,
-            asSavedReports[u8Index].sAttributeReportingConfigurationRecord.uAttributeReportableChange.zuint8ReportableChange    );
+            asSavedReports[u8Index].sAttributeReportingConfigurationRecord.uAttributeReportableChange.zuint8ReportableChange);
 
     /*Save this Records*/
     PDM_eSaveRecordData(PDM_ID_APP_REPORTS,

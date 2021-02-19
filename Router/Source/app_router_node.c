@@ -64,6 +64,7 @@
 #include "zcl.h"
 #include "app_reporting.h"
 #include "app_serial_commands.h"
+#include "app_device_temperature.h"
 
 /****************************************************************************/
 /***        Macro Definitions                                             ***/
@@ -201,6 +202,7 @@ PUBLIC void APP_vInitialiseRouter(void)
      * HERE
      */
 
+    APP_vDeviceTemperatureInit();
 
     /* The functions u8PDM_CalculateFileSystemCapacity and u8PDM_GetFileSystemOccupancy
      * may be called at any time to monitor space available in  the eeprom  */

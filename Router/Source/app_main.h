@@ -65,6 +65,8 @@ extern PUBLIC uint8 u8TimerZCL;
 extern PUBLIC uint8  u8TmrRestart;
 extern PUBLIC bool_t bResetIssued;
 
+extern PUBLIC uint8  u8TimerDeviceTempSample;
+
 extern PUBLIC tszQueue zps_msgMlmeDcfmInd;
 extern PUBLIC tszQueue zps_msgMcpsDcfmInd;
 extern PUBLIC tszQueue zps_msgMcpsDcfm;

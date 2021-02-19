@@ -51,10 +51,13 @@
 #include "app_router_node.h"
 #include "app_common.h"
 #include "app_main.h"
-#include "base_device.h"
 #include "app_events.h"
 #include <string.h>
 #include "app_reporting.h"
+#include "Basic.h"
+#include "Identify.h"
+#include "Groups.h"
+#include "DeviceTemperatureConfiguration.h"
 
 /****************************************************************************/
 /***        Macro Definitions                                             ***/
@@ -83,12 +86,15 @@ PRIVATE void APP_ZCL_cbEndpointCallback(tsZCL_CallBackEvent *psEvent);
 PUBLIC void APP_vHandleIdentify(uint16 u16Time);
 PRIVATE void APP_vHandleClusterCustomCommands(tsZCL_CallBackEvent *psEvent);
 PRIVATE void APP_vHandleClusterUpdate(tsZCL_CallBackEvent *psEvent);
+PRIVATE teZCL_Status registerLumiRouterEndPoint(uint8 u8EndPointIdentifier,
+                                    tfpZCL_ZCLCallBackFunction cbCallBack,
+                                    ts_LumiRouter* psDeviceInfo);
 PRIVATE void APP_vZCL_DeviceSpecific_Init(void);
 /****************************************************************************/
 /***        Exported Variables                                            ***/
 /****************************************************************************/
 
-tsZHA_BaseDevice sBaseDevice;
+ts_LumiRouter sDevice;
 
 /****************************************************************************/
 /***        Local Variables                                               ***/
@@ -126,12 +132,12 @@ PUBLIC void APP_ZCL_vInitialise(void)
     }
 
     /* Register Light EndPoint */
-   eZCL_Status =  eZHA_RegisterBaseDeviceEndPoint(ROUTER_APPLICATION_ENDPOINT,
-                                                   &APP_ZCL_cbEndpointCallback,
-                                                   &sBaseDevice);
+    eZCL_Status =  registerLumiRouterEndPoint(ROUTER_APPLICATION_ENDPOINT,
+                                              &APP_ZCL_cbEndpointCallback,
+                                              &sDevice);
     if (eZCL_Status != E_ZCL_SUCCESS)
     {
-            DBG_vPrintf(TRACE_ZCL, "Error: eZHA_RegisterBaseDeviceEndPoint: %02x\r\n", eZCL_Status);
+            DBG_vPrintf(TRACE_ZCL, "Error: registerLumiRouterEndPoint: %02x\r\n", eZCL_Status);
     }
 
     APP_vZCL_DeviceSpecific_Init();
@@ -151,7 +157,7 @@ PUBLIC void APP_ZCL_vInitialise(void)
  ****************************************************************************/
 PUBLIC void APP_ZCL_vSetIdentifyTime(uint16 u16Time)
 {
-    sBaseDevice.sIdentifyServerCluster.u16IdentifyTime = u16Time;
+    sDevice.sIdentifyServerCluster.u16IdentifyTime = u16Time;
 }
 
 
@@ -459,7 +465,7 @@ PUBLIC void vIdEffectTick(uint8 u8Endpoint)
 {
 
     if ((u8Endpoint == ROUTER_APPLICATION_ENDPOINT) &&
-        (sBaseDevice.sIdentifyServerCluster.u16IdentifyTime > 0 ))
+        (sDevice.sIdentifyServerCluster.u16IdentifyTime > 0 ))
     {
         u8IdentifyCount--;
         if (u8IdentifyCount == 0)
@@ -491,7 +497,7 @@ PRIVATE void APP_vHandleClusterCustomCommands(tsZCL_CallBackEvent *psEvent)
             tsCLD_IdentifyCallBackMessage *psCallBackMessage = (tsCLD_IdentifyCallBackMessage*)psEvent->uMessage.sClusterCustomMessage.pvCustomData;
             if (psCallBackMessage->u8CommandId == E_CLD_IDENTIFY_CMD_IDENTIFY)
             {
-                APP_vHandleIdentify(sBaseDevice.sIdentifyServerCluster.u16IdentifyTime);
+                APP_vHandleIdentify(sDevice.sIdentifyServerCluster.u16IdentifyTime);
             }
         }
         break;
@@ -502,11 +508,11 @@ PRIVATE void APP_vHandleClusterCustomCommands(tsZCL_CallBackEvent *psEvent)
             if (psCallBackMessage->u8CommandId == E_CLD_BASIC_CMD_RESET_TO_FACTORY_DEFAULTS )
             {
                 DBG_vPrintf(TRACE_ZCL, "Basic Factory Reset Received\n");
-                memset(&sBaseDevice,0,sizeof(tsZHA_BaseDevice));
+                memset(&sDevice,0,sizeof(ts_LumiRouter));
                 APP_vZCL_DeviceSpecific_Init();
-                eZHA_RegisterBaseDeviceEndPoint(ROUTER_APPLICATION_ENDPOINT,
-                                                &APP_ZCL_cbEndpointCallback,
-                                                &sBaseDevice);
+                registerLumiRouterEndPoint(ROUTER_APPLICATION_ENDPOINT,
+                                           &APP_ZCL_cbEndpointCallback,
+                                           &sDevice);
             }
         }
         break;
@@ -528,8 +534,8 @@ PRIVATE void APP_vHandleClusterUpdate(tsZCL_CallBackEvent *psEvent)
 {
     if (psEvent->psClusterInstance->psClusterDefinition->u16ClusterEnum == GENERAL_CLUSTER_ID_IDENTIFY)
     {
-        APP_vHandleIdentify(sBaseDevice.sIdentifyServerCluster.u16IdentifyTime);
-        if(sBaseDevice.sIdentifyServerCluster.u16IdentifyTime == 0)
+        APP_vHandleIdentify(sDevice.sIdentifyServerCluster.u16IdentifyTime);
+        if(sDevice.sIdentifyServerCluster.u16IdentifyTime == 0)
         {
             tsBDB_ZCLEvent  sBDBZCLEvent;
             /* provide callback to BDB handler for identify on Target */
@@ -538,6 +544,79 @@ PRIVATE void APP_vHandleClusterUpdate(tsZCL_CallBackEvent *psEvent)
             BDB_vZclEventHandler(&sBDBZCLEvent);
         }
     }
+}
+
+/****************************************************************************
+ *
+ * NAME: registerLumiRouterEndPoint
+ *
+ * DESCRIPTION:
+ * Registers an lumi router with the ZCL layer
+ *
+ * PARAMETERS:  Name                            Usage
+ *              u8EndPointIdentifier            Endpoint being registered
+ *              cbCallBack                      Pointer to endpoint callback
+ *              psDeviceInfo                    Pointer to struct containing
+ *                                              data for endpoint
+ *
+ * RETURNS:
+ * teZCL_Status
+ *
+ ****************************************************************************/
+PRIVATE teZCL_Status registerLumiRouterEndPoint(uint8 u8EndPointIdentifier,
+                                    tfpZCL_ZCLCallBackFunction cbCallBack,
+                                    ts_LumiRouter* psDeviceInfo)
+{
+    /* Fill in end point details */
+    psDeviceInfo->sEndPoint.u8EndPointNumber = u8EndPointIdentifier;
+    psDeviceInfo->sEndPoint.u16ManufacturerCode = ZCL_MANUFACTURER_CODE;
+    psDeviceInfo->sEndPoint.u16ProfileEnum = HA_PROFILE_ID;
+    psDeviceInfo->sEndPoint.bIsManufacturerSpecificProfile = FALSE;
+    psDeviceInfo->sEndPoint.u16NumberOfClusters = sizeof(ts_LumiRouterClusterInstances) / sizeof(tsZCL_ClusterInstance);
+    psDeviceInfo->sEndPoint.psClusterInstance = (tsZCL_ClusterInstance*)&psDeviceInfo->sClusterInstance;
+    psDeviceInfo->sEndPoint.bDisableDefaultResponse = ZCL_DISABLE_DEFAULT_RESPONSES;
+    psDeviceInfo->sEndPoint.pCallBackFunctions = cbCallBack;
+
+    if (eCLD_BasicCreateBasic(&psDeviceInfo->sClusterInstance.sBasicServer,
+                          TRUE,
+                          &sCLD_Basic,
+                          &psDeviceInfo->sBasicServerCluster,
+                          &au8BasicClusterAttributeControlBits[0]) != E_ZCL_SUCCESS)
+    {
+        return E_ZCL_FAIL;
+    }
+
+    if (eCLD_IdentifyCreateIdentify(&psDeviceInfo->sClusterInstance.sIdentifyServer,
+                          TRUE,
+                          &sCLD_Identify,
+                          &psDeviceInfo->sIdentifyServerCluster,
+                          &au8IdentifyAttributeControlBits[0],
+                          &psDeviceInfo->sIdentifyServerCustomDataStructure) != E_ZCL_SUCCESS)
+    {
+        return E_ZCL_FAIL;
+    }
+
+    if (eCLD_GroupsCreateGroups(&psDeviceInfo->sClusterInstance.sGroupsServer,
+                          TRUE,
+                          &sCLD_Groups,
+                          &psDeviceInfo->sGroupsServerCluster,
+                          &au8GroupsAttributeControlBits[0],
+                          &psDeviceInfo->sGroupsServerCustomDataStructure,
+                          &psDeviceInfo->sEndPoint) != E_ZCL_SUCCESS)
+    {
+        return E_ZCL_FAIL;
+    }
+
+    if (eCLD_DeviceTemperatureConfigurationCreateDeviceTemperatureConfiguration(&psDeviceInfo->sClusterInstance.sDeviceTemperatureConfigurationServer,
+                          TRUE,
+                          &sCLD_DeviceTemperatureConfiguration,
+                          &psDeviceInfo->sDeviceTemperatureConfigurationServerCluster,
+                          &au8DeviceTempConfigClusterAttributeControlBits[0]) != E_ZCL_SUCCESS)
+    {
+        return E_ZCL_FAIL;
+    }
+
+    return eZCL_Register(&psDeviceInfo->sEndPoint);
 }
 
 /****************************************************************************
@@ -553,11 +632,12 @@ PRIVATE void APP_vHandleClusterUpdate(tsZCL_CallBackEvent *psEvent)
  ****************************************************************************/
 PRIVATE void APP_vZCL_DeviceSpecific_Init(void)
 {
-    sBaseDevice.sOnOffServerCluster.bOnOff = FALSE;
-    memcpy(sBaseDevice.sBasicServerCluster.au8ManufacturerName, "NXP", CLD_BAS_MANUF_NAME_SIZE);
-    memcpy(sBaseDevice.sBasicServerCluster.au8ModelIdentifier, "openlumi.gw_router.jn5169", CLD_BAS_MODEL_ID_SIZE);
-    memcpy(sBaseDevice.sBasicServerCluster.au8DateCode, "20210126", CLD_BAS_DATE_SIZE);
-    memcpy(sBaseDevice.sBasicServerCluster.au8SWBuildID, "1000-0001", CLD_BAS_SW_BUILD_SIZE);
+    memcpy(sDevice.sBasicServerCluster.au8ManufacturerName, "NXP", CLD_BAS_MANUF_NAME_SIZE);
+    memcpy(sDevice.sBasicServerCluster.au8ModelIdentifier, "openlumi.gw_router.jn5169", CLD_BAS_MODEL_ID_SIZE);
+    memcpy(sDevice.sBasicServerCluster.au8DateCode, "20210126", CLD_BAS_DATE_SIZE);
+    memcpy(sDevice.sBasicServerCluster.au8SWBuildID, "1000-0001", CLD_BAS_SW_BUILD_SIZE);
+
+    sDevice.sDeviceTemperatureConfigurationServerCluster.i16CurrentTemperature = 0;
 }
 
 /****************************************************************************/

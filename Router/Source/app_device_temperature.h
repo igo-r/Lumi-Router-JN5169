@@ -1,10 +1,10 @@
 /*****************************************************************************
  *
- * MODULE:             JN-AN-1217
+ * MODULE:             
  *
- * COMPONENT:          app_reporting.h
+ * COMPONENT:          app_device_temperature.h
  *
- * DESCRIPTION:        Base Device application - reporting functionality
+ * DESCRIPTION:        Set of functions/task for read device temperature
  *
  ****************************************************************************
  *
@@ -32,43 +32,34 @@
  *
  ***************************************************************************/
 
-#ifndef APP_REPORTING_H_
-#define APP_REPORTING_H_
-#include <jendefs.h>
-#include "zcl.h"
-#include "PDM.h"
+#ifndef APP_DEVICE_TEMPERATURE_H_
+#define APP_DEVICE_TEMPERATURE_H_
 
 /****************************************************************************/
 /***        Macro Definitions                                             ***/
 /****************************************************************************/
 
+#define DEVICE_TEMPERATURE_MINIMUM_REPORTABLE_CHANGE   0x01
+#define DEVICE_TEMPERATURE_SAMPLING_TIME_IN_SECONDS    10
+
 /****************************************************************************/
 /***        Type Definitions                                              ***/
 /****************************************************************************/
-typedef struct {
-    uint16 u16ClusterID;
-    tsZCL_AttributeReportingConfigurationRecord sAttributeReportingConfigurationRecord;
-}tsReports;
+
 /****************************************************************************/
 /***        Exported Functions                                            ***/
 /****************************************************************************/
-PUBLIC PDM_teStatus eRestoreReports(void);
-PUBLIC void vMakeSupportedAttributesReportable(void);
-PUBLIC void vLoadDefaultConfigForReportable(void);
-PUBLIC void vSaveReportableRecord( uint16 u16ClusterID, tsZCL_AttributeReportingConfigurationRecord* psAttributeReportingConfigurationRecord);
-PUBLIC void vRestoreDefaultRecord( uint8 u8EndPointID, uint16 u16ClusterID, tsZCL_AttributeReportingConfigurationRecord* psAttributeReportingConfigurationRecord);
 
-
-
-
+PUBLIC void APP_vDeviceTemperatureInit(void);
+PUBLIC int16 APP_i16GetDeviceTemperature(void);
+PUBLIC void APP_cbTimerDeviceTempSample(void *pvParam);
 
 /****************************************************************************/
 /***        External Variables                                            ***/
 /****************************************************************************/
 
 /****************************************************************************/
-
 /****************************************************************************/
 /****************************************************************************/
 
-#endif //APP_REPORTING_H_
+#endif /*APP_DEVICE_TEMPERATURE_H_*/

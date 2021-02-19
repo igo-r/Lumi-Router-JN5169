@@ -72,13 +72,15 @@
 /* Reporting related configuration */
 enum
 {
- REPORT_ONOFF_SLOT = 0,
+ REPORT_DEVICE_TEMPERATURE_CONFIGURATION_SLOT = 0,
  NUMBER_OF_REPORTS
 };
 
-#define ZCL_NUMBER_OF_REPORTS     NUMBER_OF_REPORTS
-#define MIN_REPORT_INTERVAL       1
-#define MAX_REPORT_INTERVAL       0x3d
+#define ZCL_NUMBER_OF_REPORTS            NUMBER_OF_REPORTS
+#define MIN_REPORT_INTERVAL              60
+#define MAX_REPORT_INTERVAL              300
+
+#define ZCL_SYSTEM_MAX_REPORT_INTERVAL   60
 
 /* Enable wild card profile */
 #define ZCL_ALLOW_WILD_CARD_PROFILE
@@ -97,8 +99,12 @@ enum
 #define CLD_GROUPS
 #define GROUPS_SERVER
 
-#define CLD_ONOFF
-#define ONOFF_SERVER
+/* Fixing a build error
+ * Due to an error in the SDK
+ * JN-SW-4170/Components/ZCL/Devices/ZHA/Generic/Source/plug_control.c:157
+ */
+// #define CLD_DEVICE_TEMPERATURE_CONFIGURATION
+#define DEVICE_TEMPERATURE_CONFIGURATION_SERVER
 
 /****************************************************************************/
 /*             Basic Cluster - Optional Attributes                          */
@@ -142,7 +148,7 @@ enum
 #define CLD_GROUPS_DISABLE_NAME_SUPPORT
 
 /****************************************************************************/
-/*             OnOff Control Cluster - Optional Attributes                 */
+/*      Device Temperature Configuration Cluster - Optional Attributes      */
 /*                                                                          */
 /* Add the following #define's to your zcl_options.h file to add optional   */
 /* attributes to the time cluster.                                          */

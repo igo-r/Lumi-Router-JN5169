@@ -51,6 +51,7 @@
 #include "PDM.h"
 #include "app_router_node.h"
 #include "app_serial_commands.h"
+#include "app_device_temperature.h"
 
 /****************************************************************************/
 /***        Macro Definitions                                             ***/
@@ -89,6 +90,8 @@ PUBLIC uint8 u8TimerZCL;
 
 PUBLIC uint8 u8TmrRestart;
 PUBLIC bool_t bResetIssued = FALSE;
+
+PUBLIC uint8 u8TimerDeviceTempSample;
 
 PUBLIC tszQueue APP_msgBdbEvents;
 PUBLIC tszQueue APP_msgAppEvents;
@@ -219,8 +222,9 @@ PUBLIC void APP_vInitResources(void)
     ZTIMER_eInit(asTimers, sizeof(asTimers) / sizeof(ZTIMER_tsTimer));
 
     /* Create Z timers */
-    ZTIMER_eOpen(&u8TimerZCL,          APP_cbTimerZclTick,      NULL, ZTIMER_FLAG_PREVENT_SLEEP);
-    ZTIMER_eOpen(&u8TmrRestart,        APP_cbRestart,           NULL, ZTIMER_FLAG_PREVENT_SLEEP);
+    ZTIMER_eOpen(&u8TimerZCL,                APP_cbTimerZclTick,            NULL,   ZTIMER_FLAG_PREVENT_SLEEP);
+    ZTIMER_eOpen(&u8TmrRestart,              APP_cbRestart,                 NULL,   ZTIMER_FLAG_PREVENT_SLEEP);
+    ZTIMER_eOpen(&u8TimerDeviceTempSample,   APP_cbTimerDeviceTempSample,   NULL,   ZTIMER_FLAG_PREVENT_SLEEP);
 
     /* Create all the queues */
     ZQ_vQueueCreate(&APP_msgAppEvents,     APP_QUEUE_SIZE,     sizeof(APP_tsEvent),        (uint8*)asAppEvent);

@@ -55,7 +55,11 @@
 
 #include <jendefs.h>
 #include "zcl.h"
-#include "base_device.h"
+
+#include "Basic.h"
+#include "Identify.h"
+#include "Groups.h"
+#include "DeviceTemperatureConfiguration.h"
 
 /****************************************************************************/
 /***        Macro Definitions                                             ***/
@@ -64,6 +68,38 @@
 /****************************************************************************/
 /***        Type Definitions                                              ***/
 /****************************************************************************/
+
+typedef struct
+{
+    tsZCL_ClusterInstance sBasicServer;
+    tsZCL_ClusterInstance sIdentifyServer;
+    tsZCL_ClusterInstance sGroupsServer;
+    tsZCL_ClusterInstance sDeviceTemperatureConfigurationServer;
+
+} ts_LumiRouterClusterInstances  __attribute__ ((aligned(4)));
+
+typedef struct
+{
+    tsZCL_EndPointDefinition sEndPoint;
+
+    /* Cluster instances */
+    ts_LumiRouterClusterInstances sClusterInstance;
+
+    /* Basic Cluster - Server */
+    tsCLD_Basic sBasicServerCluster;
+
+    /* Identify Cluster - Server */
+    tsCLD_Identify sIdentifyServerCluster;
+    tsCLD_IdentifyCustomDataStructure sIdentifyServerCustomDataStructure;
+
+    /* Groups Cluster - Server */
+    tsCLD_Groups sGroupsServerCluster;
+    tsCLD_GroupsCustomDataStructure sGroupsServerCustomDataStructure;
+
+    /* Device Temperature Configuration Cluster - Server */
+    tsCLD_DeviceTemperatureConfiguration sDeviceTemperatureConfigurationServerCluster;
+
+} ts_LumiRouter;
 
 /****************************************************************************/
 /***        Exported Functions                                            ***/
@@ -80,7 +116,7 @@ PUBLIC void APP_ZCL_vEventHandler(ZPS_tsAfEvent *psStackEvent);
 /***        Exported Variables                                            ***/
 /****************************************************************************/
 
-extern tsZHA_BaseDevice sBaseDevice;
+extern ts_LumiRouter sDevice;
 
 #endif /* APP_ZCL_TASK_H_ */
 

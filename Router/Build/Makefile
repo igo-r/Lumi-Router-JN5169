@@ -116,7 +116,7 @@ CFLAGS  += -DDEBUG_UART=DBG_E_UART_1
 endif
 ###############################################################################
 # Define TRACE to use with DBG module
-TRACE ?=0
+TRACE ?= 0
 ifeq ($(TRACE), 1)
 CFLAGS += -DDBG_ENABLE
 
@@ -124,14 +124,16 @@ CFLAGS += -DDBG_ENABLE
 CFLAGS += -DDEBUG_APP
 CFLAGS += -DDEBUG_APP_BDB
 CFLAGS += -DDEBUG_APP_EVENT
+CFLAGS += -DDEBUG_REPORT
 CFLAGS += -DDEBUG_SERIAL
+CFLAGS += -DDEBUG_DEVICE_TEMPERATURE
 #CFLAGS += -DDEBUG_BDB
 CFLAGS += -DNXP_HARDWARE
-#CFLAGS += -DDEBUG_ZCL
-CFLAGS +=  -DDEBUG_EXCEPTIONS
+CFLAGS += -DDEBUG_ZCL
+CFLAGS += -DDEBUG_EXCEPTIONS
 #CFLAGS += -DDEBUG_CLD_IDENTIFY 
-#CFLAGS += -DDEBUG_CLD_ONOFF
 #CFLAGS += -DDEBUG_CLD_GROUPS
+# CFLAGS += -DDEBUG_CLD_DEVICE_TEMPERATURE_CONFIGURATION
 #CFLAGS  += -DSTRICT_PARAM_CHECK
 endif
 
@@ -168,6 +170,7 @@ APPSRC += zps_gen.c
 APPSRC += app_start.c
 APPSRC += app_router_node.c
 APPSRC += app_serial_commands.c
+APPSRC += app_device_temperature.c
 APPSRC += app_zcl_task.c
 #APPSRC += StackMeasure.c
 APPSRC += app_reporting.c

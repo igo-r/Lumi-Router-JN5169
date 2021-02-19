@@ -89,6 +89,7 @@
   </Profiles>
   <Profiles Name="HA" Id="0x0104">
     <Clusters Name="Basic" Id="0x0000"/>
+    <Clusters Name="DeviceTempCfg" Id="0x0002"/>
     <Clusters Name="Identify" Id="0x0003"/>
     <Clusters Name="Groups" Id="0x0004"/>
     <Clusters Name="Scenes" Id="0x0005"/>
@@ -497,12 +498,12 @@
       <InputClusters Cluster="Basic" RxAPDU="Router->apduZCL" Discoverable="true"/>
       <InputClusters Cluster="Groups" RxAPDU="Router->apduZCL" Discoverable="true"/>
       <InputClusters Cluster="Identify" RxAPDU="Router->apduZCL" Discoverable="true"/>
-      <InputClusters Cluster="OnOff" RxAPDU="Router->apduZCL" Discoverable="true"/>
+      <InputClusters Cluster="DeviceTempCfg" RxAPDU="Router->apduZCL" Discoverable="true"/>
       <InputClusters Cluster="Default" RxAPDU="Router->apduZCL" Discoverable="false"/>
       <OutputClusters Cluster="Basic" TxAPDUs="Router->apduZCL" Discoverable="false"/>
       <OutputClusters Cluster="Groups" TxAPDUs="Router->apduZCL" Discoverable="false"/>
       <OutputClusters Cluster="Identify" TxAPDUs="Router->apduZCL" Discoverable="false"/>
-      <OutputClusters Cluster="OnOff" TxAPDUs="Router->apduZCL" Discoverable="false"/>
+      <OutputClusters Cluster="DeviceTempCfg" TxAPDUs="Router->apduZCL" Discoverable="false"/>
     </Endpoints>
     <PDUConfiguration NumNPDUs="25" PDUMMutexName="mutexPDUM">
       <APDUs Id="Router->apduZDP" Name="apduZDP" Size="100" Instances="3"/>

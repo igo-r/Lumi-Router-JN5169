@@ -634,7 +634,7 @@ PRIVATE void APP_vZCL_DeviceSpecific_Init(void)
 {
     memcpy(sDevice.sBasicServerCluster.au8ManufacturerName, "NXP", CLD_BAS_MANUF_NAME_SIZE);
     memcpy(sDevice.sBasicServerCluster.au8ModelIdentifier, "openlumi.gw_router.jn5169", CLD_BAS_MODEL_ID_SIZE);
-    memcpy(sDevice.sBasicServerCluster.au8DateCode, "20210126", CLD_BAS_DATE_SIZE);
+    memcpy(sDevice.sBasicServerCluster.au8DateCode, "20210219", CLD_BAS_DATE_SIZE);
     memcpy(sDevice.sBasicServerCluster.au8SWBuildID, "1000-0001", CLD_BAS_SW_BUILD_SIZE);
 
     sDevice.sDeviceTemperatureConfigurationServerCluster.i16CurrentTemperature = 0;

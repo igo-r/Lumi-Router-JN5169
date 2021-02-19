@@ -148,11 +148,10 @@ endif
 # Path definitions
 
 # Use if application directory contains multiple targets
-SDK_BASE_DIR        = $(abspath ../../../../sdk/$(JENNIC_SDK))
-APP_BASE            = $(abspath ../..)
-APP_BLD_DIR         = $(APP_BASE)/$(TARGET)/Build
-APP_SRC_DIR         = $(APP_BASE)/$(TARGET)/Source
-APP_COMMON_SRC_DIR  = $(APP_BASE)/Common/Source
+SDK_BASE_DIR        = $(abspath ../../../sdk/$(JENNIC_SDK))
+APP_BASE            = $(abspath ..)
+APP_BLD_DIR         = $(APP_BASE)/Build
+APP_SRC_DIR         = $(APP_BASE)/Source
 HW_SRC_DIR			= $(COMPONENTS_BASE_DIR)/HardwareAPI/Source
 
 ###############################################################################
@@ -178,7 +177,7 @@ APPSRC += uart.c
 
 APP_ZPSCFG = app.zpscfg
 
-OPTIONAL_STACK_FEATURES = $(shell $(ZPSCONFIG) -n $(TARGET) -f $(APP_COMMON_SRC_DIR)/$(APP_ZPSCFG) -y )
+OPTIONAL_STACK_FEATURES = $(shell $(ZPSCONFIG) -n $(TARGET) -f $(APP_SRC_DIR)/$(APP_ZPSCFG) -y )
 
 # Construct binary hardware list
 
@@ -193,7 +192,6 @@ endif
 
 INCFLAGS += -I$(APP_SRC_DIR)
 INCFLAGS += -I$(APP_SRC_DIR)/..
-INCFLAGS += -I$(APP_COMMON_SRC_DIR)
 
 # Application specific include files
 INCFLAGS += -I$(COMPONENTS_BASE_DIR)/ZCL/Include
@@ -243,17 +241,17 @@ LDLIBS += JPT_$(JENNIC_CHIP)
 
 .PHONY: all clean
 # Path to directories containing application source 
-vpath % $(APP_SRC_DIR):$(APP_COMMON_SRC_DIR):$(ZCL_SRC_DIRS):$(ZCL_SRC):$(BDB_SRC_DIR):$(HW_SRC_DIR)
+vpath % $(APP_SRC_DIR):$(ZCL_SRC_DIRS):$(ZCL_SRC):$(BDB_SRC_DIR):$(HW_SRC_DIR)
 
 
 all: $(APP_BLD_DIR)/$(APP_BLD_NAME)$(TARGET_HARDWARE)_$(APP_BLD_DATE).bin
 
-$(APP_SRC_DIR)/pdum_gen.c $(APP_SRC_DIR)/pdum_gen.h: $(APP_COMMON_SRC_DIR)/$(APP_ZPSCFG) $(PDUMCONFIG)
+$(APP_SRC_DIR)/pdum_gen.c $(APP_SRC_DIR)/pdum_gen.h: $(APP_SRC_DIR)/$(APP_ZPSCFG) $(PDUMCONFIG)
 	$(info Configuring the PDUM ...)
 	$(PDUMCONFIG) -z $(TARGET) -f $< -o $(APP_SRC_DIR)
 	@echo
 
-$(APP_SRC_DIR)/zps_gen.c $(APP_SRC_DIR)/zps_gen.h: $(APP_COMMON_SRC_DIR)/$(APP_ZPSCFG) $(ZPSCONFIG)
+$(APP_SRC_DIR)/zps_gen.c $(APP_SRC_DIR)/zps_gen.h: $(APP_SRC_DIR)/$(APP_ZPSCFG) $(ZPSCONFIG)
 	$(info Configuring the Zigbee Protocol Stack ...)
 	$(ZPSCONFIG) -n $(TARGET) -t $(JENNIC_CHIP) -l $(ZPS_NWK_LIB) -a $(ZPS_APL_LIB) -c $(TOOL_COMMON_BASE_DIR)/$(TOOLCHAIN_PATH) -f $< -o $(APP_SRC_DIR)
 	

@@ -80,14 +80,14 @@
 	</natures>
 	<linkedResources>
 		<link>
-			<name>Common</name>
+			<name>Build</name>
 			<type>2</type>
-			<location>C:/NXP/bstudio_nxp/workspace/Lumi-Router-JN5169/Common</location>
+			<location>C:/NXP/bstudio_nxp/workspace/Lumi-Router-JN5169/Build</location>
 		</link>
 		<link>
-			<name>Router</name>
+			<name>Source</name>
 			<type>2</type>
-			<location>C:/NXP/bstudio_nxp/workspace/Lumi-Router-JN5169/Router</location>
+			<location>C:/NXP/bstudio_nxp/workspace/Lumi-Router-JN5169/Source</location>
 		</link>
 	</linkedResources>
 </projectDescription>

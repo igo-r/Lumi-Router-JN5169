@@ -1,12 +1,12 @@
-Router/Build/*.d
-Router/Build/*.o
-Router/Build/*.elf
-Router/Build/*.bin
-Router/Build/*.map
-Router/Build/*.json
-Router/Source/zps_gen.*
-Router/Source/pdum_apdu.S
-Router/Source/pdum_gen.*
+Build/*.d
+Build/*.o
+Build/*.elf
+Build/*.bin
+Build/*.map
+Build/*.json
+Source/zps_gen.*
+Source/pdum_apdu.S
+Source/pdum_gen.*
 size.txt
 
 # MacOS indexing file

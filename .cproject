@@ -18,7 +18,7 @@
 					<folderInfo id="0.876190861.1781733102.485851044.754392318." name="/" resourcePath="">
 						<toolChain id="com.beyondsemi.toolchain.gnu.ba.elf.base.1954708394" name="BA ELF GNU toolchain" superClass="com.beyondsemi.toolchain.gnu.ba.elf.base">
 							<targetPlatform binaryParser="org.eclipse.cdt.core.ELF" id="com.beyondsemi.target.gnu.platform.ba.elf.1530889585" superClass="com.beyondsemi.target.gnu.platform.ba.elf"/>
-							<builder arguments="JENNIC_CHIP_FAMILY=JN516x JENNIC_CHIP=JN5169 ICODES=0" buildPath="${ProjDirPath}/../Router/Build" command="make" id="com.beyondsemi.builder.cdt.gnu.932048150" keepEnvironmentInBuildfile="false" managedBuildOn="false" name="Gnu Make Builder" superClass="com.beyondsemi.builder.cdt.gnu"/>
+							<builder arguments="JENNIC_CHIP_FAMILY=JN516x JENNIC_CHIP=JN5169 ICODES=0" buildPath="${ProjDirPath}/Build" command="make" id="com.beyondsemi.builder.cdt.gnu.932048150" keepEnvironmentInBuildfile="false" managedBuildOn="false" name="Gnu Make Builder" superClass="com.beyondsemi.builder.cdt.gnu"/>
 							<tool id="com.beyondsemi.tool.gnu.ba.elf.compiler.c.base.1517427195" name="BA ELF GNU C compiler" superClass="com.beyondsemi.tool.gnu.ba.elf.compiler.c.base">
 								<inputType id="com.beyondsemi.base.ba.elf.c.compiler.input.271870039" superClass="com.beyondsemi.base.ba.elf.c.compiler.input"/>
 								<inputType id="com.beyondsemi.assembler.macro.input.1169716590" superClass="com.beyondsemi.assembler.macro.input"/>

@@ -185,7 +185,7 @@ PUBLIC void APP_vLoadDefaultConfigForReportable(void)
 {
     int i;
 
-    DBG_vPrintf(TRACE_REPORT, "Loading default configuration for reports");
+    DBG_vPrintf(TRACE_REPORT, "Loading default configuration for reports\n");
 
     memset(asSavedReports, 0, sizeof(asSavedReports));
 

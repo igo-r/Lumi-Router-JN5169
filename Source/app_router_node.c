@@ -78,18 +78,6 @@
 #define TRACE_APP FALSE
 #endif
 
-#ifdef DEBUG_APP_EVENT
-#define TRACE_APP_EVENT TRUE
-#else
-#define TRACE_APP_EVENT FALSE
-#endif
-
-#ifdef DEBUG_APP_BDB
-#define TRACE_APP_BDB TRUE
-#else
-#define TRACE_APP_BDB FALSE
-#endif
-
 /****************************************************************************/
 /***        Type Definitions                                              ***/
 /****************************************************************************/
@@ -256,20 +244,20 @@ PUBLIC void APP_vBdbCallback(BDB_tsBdbEvent *psBdbEvent)
             DBG_vPrintf(TRACE_APP, "BDB Try Steering status %d\n", eStatus);
         }
         else {
-            DBG_vPrintf(TRACE_APP, "BDB Init go Running");
+            DBG_vPrintf(TRACE_APP, "BDB Init go Running\n");
             eNodeState = E_RUNNING;
             PDM_eSaveRecordData(PDM_ID_APP_ROUTER, &eNodeState, sizeof(APP_teNodeState));
         }
         break;
 
     case BDB_EVENT_NWK_FORMATION_SUCCESS:
-        DBG_vPrintf(TRACE_APP, "APP: NwkFormation Success \n");
+        DBG_vPrintf(TRACE_APP, "APP: NwkFormation Success\n");
         eNodeState = E_RUNNING;
         PDM_eSaveRecordData(PDM_ID_APP_ROUTER, &eNodeState, sizeof(APP_teNodeState));
         break;
 
     case BDB_EVENT_NWK_STEERING_SUCCESS:
-        DBG_vPrintf(TRACE_APP, "APP: NwkSteering Success \n");
+        DBG_vPrintf(TRACE_APP, "APP: NwkSteering Success\n");
         eNodeState = E_RUNNING;
         PDM_eSaveRecordData(PDM_ID_APP_ROUTER, &eNodeState, sizeof(APP_teNodeState));
         break;

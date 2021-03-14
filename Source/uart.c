@@ -111,7 +111,7 @@ PRIVATE uint8 rxbuf[127];
  ****************************************************************************/
 PUBLIC void UART_vInit(void)
 {
-    DBG_vPrintf(TRACE_UART, "Initialising UART ...");
+    DBG_vPrintf(TRACE_UART, "Initialising UART... ");
 
     bAHI_UartEnable(UART, txbuf, (uint8)16, rxbuf, (uint8)127);
 

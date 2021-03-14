@@ -131,7 +131,7 @@ PUBLIC void APP_ZCL_vInitialise(void)
     eZCL_Status =
         APP_ZCL_eRegisterLumiRouterEndPoint(LUMIROUTER_APPLICATION_ENDPOINT, &APP_ZCL_cbEndpointCallback, &sLumiRouter);
     if (eZCL_Status != E_ZCL_SUCCESS)
-        DBG_vPrintf(TRACE_ZCL, "Error: APP_ZCL_eRegisterLumiRouterEndPoint: %02x\r\n", eZCL_Status);
+        DBG_vPrintf(TRACE_ZCL, "Error: APP_ZCL_eRegisterLumiRouterEndPoint: %02x\n", eZCL_Status);
 
     APP_ZCL_vDeviceSpecific_Init();
 }
@@ -242,47 +242,47 @@ PRIVATE void APP_ZCL_cbGeneralCallback(tsZCL_CallBackEvent *psEvent)
     switch (psEvent->eEventType) {
 
     case E_ZCL_CBET_LOCK_MUTEX:
-        DBG_vPrintf(TRACE_ZCL, "\nEVT: Lock Mutex\r\n");
+        DBG_vPrintf(TRACE_ZCL, "EVT: Lock Mutex\n");
         break;
 
     case E_ZCL_CBET_UNLOCK_MUTEX:
-        DBG_vPrintf(TRACE_ZCL, "\nEVT: Unlock Mutex\r\n");
+        DBG_vPrintf(TRACE_ZCL, "EVT: Unlock Mutex\n");
         break;
 
     case E_ZCL_CBET_UNHANDLED_EVENT:
-        DBG_vPrintf(TRACE_ZCL, "\nEVT: Unhandled Event\r\n");
+        DBG_vPrintf(TRACE_ZCL, "EVT: Unhandled Event\n");
         break;
 
     case E_ZCL_CBET_READ_ATTRIBUTES_RESPONSE:
-        DBG_vPrintf(TRACE_ZCL, "\nEVT: Read attributes response");
+        DBG_vPrintf(TRACE_ZCL, "EVT: Read attributes response\n");
         break;
 
     case E_ZCL_CBET_READ_REQUEST:
-        DBG_vPrintf(TRACE_ZCL, "\nEVT: Read request");
+        DBG_vPrintf(TRACE_ZCL, "EVT: Read request\n");
         break;
 
     case E_ZCL_CBET_DEFAULT_RESPONSE:
-        DBG_vPrintf(TRACE_ZCL, "\nEVT: Default response");
+        DBG_vPrintf(TRACE_ZCL, "EVT: Default response\n");
         break;
 
     case E_ZCL_CBET_ERROR:
-        DBG_vPrintf(TRACE_ZCL, "\nEVT: Error");
+        DBG_vPrintf(TRACE_ZCL, "EVT: Error\n");
         break;
 
     case E_ZCL_CBET_TIMER:
-        DBG_vPrintf(TRACE_ZCL, "\nEVT: Timer");
+        DBG_vPrintf(TRACE_ZCL, "EVT: Timer\n");
         break;
 
     case E_ZCL_CBET_ZIGBEE_EVENT:
-        DBG_vPrintf(TRACE_ZCL, "\nEVT: ZigBee");
+        DBG_vPrintf(TRACE_ZCL, "EVT: ZigBee\n");
         break;
 
     case E_ZCL_CBET_CLUSTER_CUSTOM:
-        DBG_vPrintf(TRACE_ZCL, "\nEP EVT: Custom");
+        DBG_vPrintf(TRACE_ZCL, "EP EVT: Custom\n");
         break;
 
     default:
-        DBG_vPrintf(TRACE_ZCL, "\nInvalid event type");
+        DBG_vPrintf(TRACE_ZCL, "Invalid event type\n");
         break;
     }
 }
@@ -306,47 +306,47 @@ PRIVATE void APP_ZCL_cbEndpointCallback(tsZCL_CallBackEvent *psEvent)
         break;
 
     case E_ZCL_CBET_UNHANDLED_EVENT:
-        DBG_vPrintf(TRACE_ZCL, "\nEP EVT: Unhandled event");
+        DBG_vPrintf(TRACE_ZCL, "EP EVT: Unhandled event\n");
         break;
 
     case E_ZCL_CBET_READ_INDIVIDUAL_ATTRIBUTE_RESPONSE:
         DBG_vPrintf(TRACE_ZCL,
-                    "\nEP EVT: Rd Attr Rsp %04x AS %d",
+                    "EP EVT: Rd Attr Rsp %04x AS %d\n",
                     psEvent->uMessage.sIndividualAttributeResponse.u16AttributeEnum,
                     psEvent->uMessage.sIndividualAttributeResponse.eAttributeStatus);
         break;
 
     case E_ZCL_CBET_READ_ATTRIBUTES_RESPONSE:
-        DBG_vPrintf(TRACE_ZCL, "\nEP EVT: Read attributes response");
+        DBG_vPrintf(TRACE_ZCL, "EP EVT: Read attributes response\n");
         break;
 
     case E_ZCL_CBET_READ_REQUEST:
-        DBG_vPrintf(TRACE_ZCL, "\nEP EVT: Read request");
+        DBG_vPrintf(TRACE_ZCL, "EP EVT: Read request\n");
         break;
 
     case E_ZCL_CBET_DEFAULT_RESPONSE:
-        DBG_vPrintf(TRACE_ZCL, "\nEP EVT: Default response");
+        DBG_vPrintf(TRACE_ZCL, "EP EVT: Default response\n");
         break;
 
     case E_ZCL_CBET_ERROR:
-        DBG_vPrintf(TRACE_ZCL, "\nEP EVT: Error");
+        DBG_vPrintf(TRACE_ZCL, "EP EVT: Error\n");
         break;
 
     case E_ZCL_CBET_TIMER:
-        DBG_vPrintf(TRACE_ZCL, "\nEP EVT: Timer");
+        DBG_vPrintf(TRACE_ZCL, "EP EVT: Timer\n");
         break;
 
     case E_ZCL_CBET_ZIGBEE_EVENT:
-        DBG_vPrintf(TRACE_ZCL, "\nEP EVT: ZigBee");
+        DBG_vPrintf(TRACE_ZCL, "EP EVT: ZigBee\n");
         break;
 
     case E_ZCL_CBET_CLUSTER_CUSTOM:
-        DBG_vPrintf(TRACE_ZCL, "\nEP EVT: Custom Cl %04x\n", psEvent->uMessage.sClusterCustomMessage.u16ClusterId);
+        DBG_vPrintf(TRACE_ZCL, "EP EVT: Custom Cl %04x\n", psEvent->uMessage.sClusterCustomMessage.u16ClusterId);
         APP_ZCL_vHandleClusterCustomCommands(psEvent);
         break;
 
     case E_ZCL_CBET_WRITE_INDIVIDUAL_ATTRIBUTE:
-        DBG_vPrintf(TRACE_ZCL, "\nEP EVT: Write Individual Attribute Status %02x\n", psEvent->eZCL_Status);
+        DBG_vPrintf(TRACE_ZCL, "EP EVT: Write Individual Attribute Status %02x\n", psEvent->eZCL_Status);
         break;
 
     case E_ZCL_CBET_REPORT_INDIVIDUAL_ATTRIBUTE: {
@@ -395,7 +395,7 @@ PRIVATE void APP_ZCL_cbEndpointCallback(tsZCL_CallBackEvent *psEvent)
         break;
 
     default:
-        DBG_vPrintf(TRACE_ZCL, "\nEP EVT: Invalid evt type 0x%x", (uint8)psEvent->eEventType);
+        DBG_vPrintf(TRACE_ZCL, "EP EVT: Invalid evt type 0x%x\n", (uint8)psEvent->eEventType);
         break;
     }
 }

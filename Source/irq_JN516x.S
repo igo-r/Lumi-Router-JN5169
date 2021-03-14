@@ -1,5 +1,5 @@
 ###########################################################################
-#  Module Name:        Low level interrupt handler for JN5168 FreeRTOS port
+#  Module Name:        Low level interrupt handler for JN5169 FreeRTOS port
 #
 #  Created By:         Ian Morris
 #

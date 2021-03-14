@@ -1,10 +1,10 @@
 ###############################################################################
 #
-# MODULE:   Makefile
+# MODULE:       Makefile
 #
-# DESCRIPTION: Makefile for the Router
-# 
- ############################################################################
+# DESCRIPTION:  Makefile for the Lumi Router
+#
+###############################################################################
 #
 # This software is owned by NXP B.V. and/or its supplier and is protected
 # under applicable copyright laws. All rights are reserved. We grant You,
@@ -28,35 +28,19 @@
 #
 # Copyright NXP B.V. 2017. All rights reserved
 #
-############################################################################
-
+###############################################################################
 # Application target name
 
-TARGET = Router
-
-APP_BLD_NAME = Lumi_Router
-APP_BLD_DATE = 20210219
+TARGET = LumiRouter
 
 ###############################################################################
-#User definable make parameters that may be overwritten from the command line
+# Application build date
 
-# Default target device is the JN5169
-
-JENNIC_CHIP ?= JN5169
-JENNIC_CHIP_FAMILY ?=JN516x
-
-STACK_SIZE = 5000
-MINIMUM_HEAP_SIZE = 2000
-
-JENNIC_SDK              = JN-SW-4170
-ZNCLKCMD                = AppBuildZBPro.ld
-ENDIAN 	                = BIG_ENDIAN
+BUILD_DATE = 20210219
+CFLAGS    += -DBUILD_DATE_STRING=\"$(BUILD_DATE)\"
 
 ###############################################################################
 # Network settings
-
-# Optional network.mk for channel
-sinclude ../../../network.mk
 
 # Channel (0 for default channels)
 SINGLE_CHANNEL ?= 0
@@ -64,28 +48,68 @@ CFLAGS         += -DSINGLE_CHANNEL=$(SINGLE_CHANNEL)
 
 # Enabling High Power Mode on the Modules
 # to support the zigbee module installed in the Aqara ZHWG11LM device
-CFLAGS         += -DENABLING_HIGH_POWER_MODE
+ENABLING_HIGH_POWER_MODE ?= 1
+ifeq ($(ENABLING_HIGH_POWER_MODE), 1)
+CFLAGS += -DENABLING_HIGH_POWER_MODE
+endif
 
 ###############################################################################
-# Default DK4 development kit target hardware
-JENNIC_PCB ?= DEVKIT4
+# Target chip is the JN5169
 
-#Always tell any actual drivers they're running under an RTOS in this usage
-CFLAGS  += -DRTOS
+JENNIC_CHIP        = JN5169
+JENNIC_CHIP_FAMILY = JN516x
 
 ###############################################################################
 # Select the network stack (e.g. MAC, ZBPro, ZCL)
 
-JENNIC_STACK ?= ZCL
-JENNIC_MAC ?= MiniMacShim
+JENNIC_STACK = ZCL
+
+###############################################################################
+# Default SDK is the IEEE802.15.4 SDK
+
+JENNIC_SDK = JN-SW-4170
+
+###############################################################################
+# Default MAC is the IEEE802.15.4 Mini MAC
+
+JENNIC_MAC = MiniMacShim
 
 ###############################################################################
 # ZBPro Stack specific options
-ZBPRO_DEVICE_TYPE ?= ZCR
-#PDM_BUILD_TYPE ?= _EXTERNAL_FLASH
-PDM_BUILD_TYPE ?=_EEPROM
 
+ZBPRO_DEVICE_TYPE = ZCR
+PDM_BUILD_TYPE    =_EEPROM
+
+STACK_SIZE        = 5000
+MINIMUM_HEAP_SIZE = 2000
+
+ZNCLKCMD = AppBuildZBPro.ld
+ENDIAN   = BIG_ENDIAN
+
+###############################################################################
+# Debug options
+
+DEBUG ?= NONE
+
+ifeq ($(DEBUG), UART1)
+$(info Building with debug UART1 ...)
+TRACE   = 1
+CFLAGS += -DUART_DEBUGGING
+CFLAGS += -DDBG_ENABLE
+CLFAGS += -DDEBUG_BDB
+CFLAGS += -DDEBUG_APP
+CFLAGS += -DDEBUG_APP_BDB
+CFLAGS += -DDEBUG_APP_EVENT
+CFLAGS += -DDEBUG_REPORT
+CFLAGS += -DDEBUG_ZCL
+CFLAGS += -DDEBUG_UART
+CFLAGS += -DDEBUG_SERIAL
+CFLAGS += -DDEBUG_DEVICE_TEMPERATURE
+endif
+
+###############################################################################
 # BDB features – Enable as required
+
 #BDB_SUPPORT_TOUCHLINK_INITIATOR ?= 1
 #BDB_SUPPORT_TOUCHLINK_TARGET ?= 1
 BDB_SUPPORT_NWK_STEERING ?= 1
@@ -94,98 +118,49 @@ BDB_SUPPORT_NWK_FORMATION ?= 1
 BDB_SUPPORT_FIND_AND_BIND_TARGET ?= 1
 
 ###############################################################################
-# Debug options define DEBUG either HW or SW
-#DEBUG ?=SW
-#DEBUG ?=HW
-DEBUG ?= NONE
+# Generate build file name
 
-# Define which UART to use for HW debug
-#  DEBUG_MODE  ?=  SWD    # For ARM core
-
-ifeq ($(DEBUG), UART0)
-$(info Building with debug UART0..)
-DEBUG_PORT ?= UART0
-CFLAGS  += -DUART_DEBUGGING
-CFLAGS  += -DDEBUG_UART=DBG_E_UART_0
+ifneq ($(SINGLE_CHANNEL), 0)
+TARGET_FEATURES := $(TARGET_FEATURES)_CH$(SINGLE_CHANNEL)
 endif
+
 ifeq ($(DEBUG), UART1)
-$(info Building with debug UART1..)
-DEBUG_PORT ?= UART1
-CFLAGS  += -DUART_DEBUGGING
-CFLAGS  += -DDEBUG_UART=DBG_E_UART_1
-endif
-###############################################################################
-# Define TRACE to use with DBG module
-TRACE ?= 0
-ifeq ($(TRACE), 1)
-CFLAGS += -DDBG_ENABLE
-
-# Enable any debug output here:
-CFLAGS += -DDEBUG_APP
-CFLAGS += -DDEBUG_APP_BDB
-CFLAGS += -DDEBUG_APP_EVENT
-CFLAGS += -DDEBUG_REPORT
-CFLAGS += -DDEBUG_SERIAL
-CFLAGS += -DDEBUG_DEVICE_TEMPERATURE
-#CFLAGS += -DDEBUG_BDB
-CFLAGS += -DNXP_HARDWARE
-CFLAGS += -DDEBUG_ZCL
-CFLAGS += -DDEBUG_EXCEPTIONS
-#CFLAGS += -DDEBUG_CLD_IDENTIFY 
-#CFLAGS += -DDEBUG_CLD_GROUPS
-# CFLAGS += -DDEBUG_CLD_DEVICE_TEMPERATURE_CONFIGURATION
-#CFLAGS  += -DSTRICT_PARAM_CHECK
+TARGET_FEATURES := $(TARGET_FEATURES)_DEBUG
 endif
 
-CFLAGS += -D$(TARGET)
-
-ICODES ?=0
-ifeq ($(ICODES), 1)
-CFLAGS  += -DBDB_JOIN_USES_INSTALL_CODE_KEY=1
-endif
+GENERATED_FILE_NAME = $(TARGET)$(TARGET_FEATURES)_$(BUILD_DATE)
 
 ###############################################################################
 # Path definitions
 
 # Use if application directory contains multiple targets
-SDK_BASE_DIR        = $(abspath ../../../sdk/$(JENNIC_SDK))
-APP_BASE            = $(abspath ..)
-APP_BLD_DIR         = $(APP_BASE)/Build
-APP_SRC_DIR         = $(APP_BASE)/Source
-HW_SRC_DIR			= $(COMPONENTS_BASE_DIR)/HardwareAPI/Source
+SDK_BASE_DIR = $(abspath ../../../sdk/$(JENNIC_SDK))
+APP_BASE     = $(abspath ..)
+APP_BLD_DIR  = $(APP_BASE)/Build
+APP_SRC_DIR  = $(APP_BASE)/Source
+UTIL_SRC_DIR = $(COMPONENTS_BASE_DIR)/ZigbeeCommon/Source
+HW_SRC_DIR   = $(COMPONENTS_BASE_DIR)/HardwareAPI/Source
 
 ###############################################################################
 # Application Source files
 
 # Note: Path to source file is found using vpath below, so only .c filename is required
-APPSRC = app_main.c
-APPSRC += irq_JN516x.S
+APPSRC  = irq_JN516x.S
 APPSRC += portasm_JN516x.S
 APPSRC += port_JN516x.c
-
 APPSRC += pdum_gen.c
 APPSRC += pdum_apdu.S
 APPSRC += zps_gen.c
 APPSRC += app_start.c
+APPSRC += app_main.c
 APPSRC += app_router_node.c
+APPSRC += app_zcl_task.c
+APPSRC += app_reporting.c
 APPSRC += app_serial_commands.c
 APPSRC += app_device_temperature.c
-APPSRC += app_zcl_task.c
-#APPSRC += StackMeasure.c
-APPSRC += app_reporting.c
 APPSRC += uart.c
 
 APP_ZPSCFG = app.zpscfg
-
-OPTIONAL_STACK_FEATURES = $(shell $(ZPSCONFIG) -n $(TARGET) -f $(APP_SRC_DIR)/$(APP_ZPSCFG) -y )
-
-# Construct binary hardware list
-
-TARGET_HARDWARE:=_$(JENNIC_CHIP)
-
-ifneq ($(SINGLE_CHANNEL), 0)
-TARGET_HARDWARE:=$(TARGET_HARDWARE)_CH$(SINGLE_CHANNEL)
-endif
 
 ###############################################################################
 # Standard Application header search paths
@@ -199,18 +174,18 @@ INCFLAGS += -I$(COMPONENTS_BASE_DIR)/ZCIF/Include
 INCFLAGS += -I$(COMPONENTS_BASE_DIR)/Xcv/Include/
 INCFLAGS += -I$(COMPONENTS_BASE_DIR)/Recal/Include/
 INCFLAGS += -I$(COMPONENTS_BASE_DIR)/MicroSpecific/Include
+INCFLAGS += -I$(COMPONENTS_BASE_DIR)/ZigbeeCommon/Include
 INCFLAGS += -I$(COMPONENTS_BASE_DIR)/HardwareAPI/Include
 
 ###############################################################################
+# Optional stack features to pull relevant libraries into the build.
 
-# You should not need to edit below this line
+OPTIONAL_STACK_FEATURES = $(shell $(ZPSCONFIG) -n $(TARGET) -f $(APP_SRC_DIR)/$(APP_ZPSCFG) -y )
 
-###############################################################################
 ###############################################################################
 # Configure for the selected chip or chip family
 
 include $(SDK_BASE_DIR)/Chip/Common/Build/config.mk
-include $(SDK_BASE_DIR)/Platform/Common/Build/config.mk
 include $(SDK_BASE_DIR)/Stack/Common/Build/config.mk
 include $(SDK_BASE_DIR)/Components/BDB/Build/config.mk
 
@@ -241,22 +216,21 @@ LDLIBS += JPT_$(JENNIC_CHIP)
 
 .PHONY: all clean
 # Path to directories containing application source 
-vpath % $(APP_SRC_DIR):$(ZCL_SRC_DIRS):$(ZCL_SRC):$(BDB_SRC_DIR):$(HW_SRC_DIR)
+vpath % $(APP_SRC_DIR):$(ZCL_SRC_DIRS):$(ZCL_SRC):$(BDB_SRC_DIR):$(UTIL_SRC_DIR):$(HW_SRC_DIR)
 
+all: $(APP_BLD_DIR)/$(GENERATED_FILE_NAME).bin
 
-all: $(APP_BLD_DIR)/$(APP_BLD_NAME)$(TARGET_HARDWARE)_$(APP_BLD_DATE).bin
+-include $(APPDEPS)
+$(APP_BLD_DIR)/%.d:
+	rm -f $*.o
 
 $(APP_SRC_DIR)/pdum_gen.c $(APP_SRC_DIR)/pdum_gen.h: $(APP_SRC_DIR)/$(APP_ZPSCFG) $(PDUMCONFIG)
 	$(info Configuring the PDUM ...)
 	$(PDUMCONFIG) -z $(TARGET) -f $< -o $(APP_SRC_DIR)
-	@echo
 
 $(APP_SRC_DIR)/zps_gen.c $(APP_SRC_DIR)/zps_gen.h: $(APP_SRC_DIR)/$(APP_ZPSCFG) $(ZPSCONFIG)
 	$(info Configuring the Zigbee Protocol Stack ...)
 	$(ZPSCONFIG) -n $(TARGET) -t $(JENNIC_CHIP) -l $(ZPS_NWK_LIB) -a $(ZPS_APL_LIB) -c $(TOOL_COMMON_BASE_DIR)/$(TOOLCHAIN_PATH) -f $< -o $(APP_SRC_DIR)
-	
-$(APP_BLD_DIR)/pdum_gen.o: CFLAGS += -fno-lto
-$(APP_BLD_DIR)/zps_gen.o: CFLAGS += -fno-lto
 
 $(APP_BLD_DIR)/%.o: %.S
 	$(info Assembling $< ...)
@@ -268,21 +242,19 @@ $(APP_BLD_DIR)/%.o: %.c
 	$(CC) -c -o $(subst Source,Build,$@) $(CFLAGS) $(INCFLAGS) $< -MD -MF $(APP_BLD_DIR)/$*.d -MP
 	@echo
 
-$(APP_BLD_DIR)/$(APP_BLD_NAME)$(TARGET_HARDWARE)_$(APP_BLD_DATE).elf: $(APPOBJS) $(addsuffix.a,$(addprefix $(COMPONENTS_BASE_DIR)/Library/lib,$(APPLDLIBS))) 
+$(APP_BLD_DIR)/$(GENERATED_FILE_NAME).elf: $(APPOBJS) $(addsuffix.a,$(addprefix $(COMPONENTS_BASE_DIR)/Library/lib,$(APPLDLIBS))) 
 	$(info Linking $@ ...)
-	$(CC) -Wl,--gc-sections -Wl,-u_AppColdStart -Wl,-u_AppWarmStart $(LDFLAGS) -L $(SDK_BASE_DIR)/Stack/ZCL/Build/ -T$(ZNCLKCMD) -o $@ -Wl,--start-group $(APPOBJS) $(addprefix -l,$(LDLIBS)) -lm -Wl,--end-group -Wl,-Map,$(APP_BLD_NAME)$(TARGET_HARDWARE)_$(APP_BLD_DATE).map 
-	$(SIZE) $@ 
-	date +%c >> $(APP_BASE)/size.txt
-	$(SIZE) $@ >> $(APP_BASE)/size.txt
+	$(CC) -Wl,--gc-sections -Wl,-u_AppColdStart -Wl,-u_AppWarmStart $(LDFLAGS) -L $(SDK_BASE_DIR)/Stack/ZCL/Build/ -T$(ZNCLKCMD) -o $@ -Wl,--start-group $(APPOBJS) $(addprefix -l,$(LDLIBS)) -lm -Wl,--end-group -Wl,-Map,$(GENERATED_FILE_NAME).map 
+	$(SIZE) $@
 
-$(APP_BLD_DIR)/$(APP_BLD_NAME)$(TARGET_HARDWARE)_$(APP_BLD_DATE).bin: $(APP_BLD_DIR)/$(APP_BLD_NAME)$(TARGET_HARDWARE)_$(APP_BLD_DATE).elf
+$(APP_BLD_DIR)/$(GENERATED_FILE_NAME).bin: $(APP_BLD_DIR)/$(GENERATED_FILE_NAME).elf
 	$(info Generating binary ...)
 	$(OBJCOPY) -j .version -j .bir -j .flashheader -j .vsr_table -j .vsr_handlers -j .rodata -j .text -j .data -j .bss -j .heap -j .stack -S -O binary $< $@
 
 ###############################################################################
 
 clean:
-	rm -f $(APPOBJS) $(APPDEPS) $(APP_BLD_NAME)$(TARGET_HARDWARE)_$(APP_BLD_DATE).bin $(APP_BLD_NAME)$(TARGET_HARDWARE)_$(APP_BLD_DATE).elf $(APP_BLD_NAME)$(TARGET_HARDWARE)_$(APP_BLD_DATE).map
-	rm -f $(APP_SRC_DIR)/pdum_gen.* $(APP_SRC_DIR)/zps_gen*.*
+	rm -f $(APPOBJS) $(APPDEPS) $(TARGET)*_$(BUILD_DATE).bin $(TARGET)*_$(BUILD_DATE).elf $(TARGET)*_$(BUILD_DATE).map
+	rm -f $(APP_SRC_DIR)/pdum_gen.* $(APP_SRC_DIR)/zps_gen.* $(APP_SRC_DIR)/pdum_apdu.S
 
 ###############################################################################

@@ -1,10 +1,10 @@
-/*****************************************************************************
+/****************************************************************************
  *
- * MODULE:             JN-AN-1217
+ * MODULE:               Lumi Router
  *
- * COMPONENT:          app_main.h
+ * COMPONENT:            app_main.h
  *
- * DESCRIPTION:
+ * DESCRIPTION:          Application main file
  *
  ****************************************************************************
  *
@@ -30,14 +30,19 @@
  *
  * Copyright NXP B.V. 2017. All rights reserved
  *
- ***************************************************************************/
+ ****************************************************************************/
 
 #ifndef APP_MAIN_H
 #define APP_MAIN_H
 
+/****************************************************************************/
+/***        Include Files                                                 ***/
+/****************************************************************************/
+
+#include <jendefs.h>
+
+/* SDK JN-SW-4170 */
 #include "ZQueue.h"
-#include "tsv_pub.h"
-#include "bdb_api.h"
 
 /****************************************************************************/
 /***        Macro Definitions                                             ***/
@@ -48,45 +53,33 @@
 /****************************************************************************/
 
 /****************************************************************************/
-/***        Exported Functions                                            ***/
+/***        Exported Variables                                            ***/
 /****************************************************************************/
 
-PUBLIC void APP_vInitResources(void);
-PUBLIC void APP_vMainLoop(void);
-PUBLIC void APP_vSetUpHardware(void);
-PUBLIC void APP_cbRestart(void *pvParam);
+extern PUBLIC uint8 u8TimerTick;
+extern PUBLIC uint8 u8TimerRestart;
+extern PUBLIC uint8 u8TimerDeviceTemperature;
 
-/****************************************************************************/
-/***        External Variables                                            ***/
-/****************************************************************************/
-
-extern PUBLIC uint8 u8TimerZCL;
-
-extern PUBLIC uint8  u8TmrRestart;
-extern PUBLIC bool_t bResetIssued;
-
-extern PUBLIC uint8  u8TimerDeviceTempSample;
+extern PUBLIC tszQueue APP_msgBdbEvents;
+extern PUBLIC tszQueue APP_msgAppEvents;
+extern PUBLIC tszQueue APP_msgSerialTx;
+extern PUBLIC tszQueue APP_msgSerialRx;
 
 extern PUBLIC tszQueue zps_msgMlmeDcfmInd;
 extern PUBLIC tszQueue zps_msgMcpsDcfmInd;
 extern PUBLIC tszQueue zps_msgMcpsDcfm;
 extern PUBLIC tszQueue zps_TimeEvents;
 
-//extern PUBLIC tszQueue APP_msgZpsEvents;
-extern PUBLIC tszQueue APP_msgBdbEvents;
-extern PUBLIC tszQueue APP_msgAppEvents;
+/****************************************************************************/
+/***        Exported Functions                                            ***/
+/****************************************************************************/
 
-extern PUBLIC tszQueue APP_msgSerialTx;
-extern PUBLIC tszQueue APP_msgSerialRx;
+PUBLIC void APP_vMainLoop(void);
+PUBLIC void APP_vSetUpHardware(void);
+PUBLIC void APP_vInitResources(void);
 
 /****************************************************************************/
-/****************************************************************************/
+/***        END OF FILE                                                   ***/
 /****************************************************************************/
 
 #endif /* APP_MAIN_H */
-
-
-
-
-
-

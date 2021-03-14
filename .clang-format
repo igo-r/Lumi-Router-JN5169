@@ -1,0 +1,12 @@
+---
+# We'll use defaults from the LLVM style, but with 4 columns indentation.
+BasedOnStyle: LLVM
+AlignConsecutiveBitFields: true
+AlignConsecutiveMacros: true
+AllowAllArgumentsOnNextLine: false
+AllowShortFunctionsOnASingleLine: None
+BinPackArguments: false
+BinPackParameters: false
+BreakBeforeBraces: Stroustrup
+ColumnLimit: 120
+IndentWidth: 4

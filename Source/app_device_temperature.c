@@ -1,10 +1,10 @@
-/*****************************************************************************
+/****************************************************************************
  *
- * MODULE:             
+ * MODULE:              Lumi Router
  *
- * COMPONENT:          app_device_temperature.c
+ * COMPONENT:           app_device_temperature.c
  *
- * DESCRIPTION:        Set of functions/task for read device temperature
+ * DESCRIPTION:         Set of functions/task for read device temperature
  *
  ****************************************************************************
  *
@@ -30,30 +30,35 @@
  *
  * Copyright NXP B.V. 2016. All rights reserved
  *
- ***************************************************************************/
+ ****************************************************************************/
 
 /****************************************************************************/
-/***        Include files                                                 ***/
+/***        Include Files                                                 ***/
 /****************************************************************************/
 
 #include <jendefs.h>
-#include "AppHardwareApi.h"
 
-#include "dbg.h"
+/* Application */
 #include "app_device_temperature.h"
 #include "app_main.h"
 #include "app_zcl_task.h"
+
+/* SDK JN-SW-4170 */
+#include "AppHardwareApi.h"
 #include "ZTimer.h"
+#include "dbg.h"
 
 /****************************************************************************/
 /***        Macro Definitions                                             ***/
 /****************************************************************************/
 
-#ifndef DEBUG_DEVICE_TEMPERATURE
-    #define TRACE_DEVICE_TEMPERATURE   FALSE
+#ifdef DEBUG_DEVICE_TEMPERATURE
+#define TRACE_DEVICE_TEMPERATURE TRUE
 #else
-    #define TRACE_DEVICE_TEMPERATURE   TRUE
+#define TRACE_DEVICE_TEMPERATURE FALSE
 #endif
+
+#define DEVICE_TEMPERATURE_SAMPLING_TIME_IN_SEC 1000
 
 /****************************************************************************/
 /***        Type Definitions                                              ***/
@@ -63,7 +68,8 @@
 /***        Local Function Prototypes                                     ***/
 /****************************************************************************/
 
-PRIVATE int16 i16ConvertChipTemp(uint16 u16AdcValue);
+PRIVATE int16 APP_i16GetDeviceTemperature(void);
+PRIVATE int16 APP_i16ConvertChipTemp(uint16 u16AdcValue);
 
 /****************************************************************************/
 /***        Exported Variables                                            ***/
@@ -77,31 +83,55 @@ PRIVATE int16 i16ConvertChipTemp(uint16 u16AdcValue);
 /***        Exported Functions                                            ***/
 /****************************************************************************/
 
-/******************************************************************************
+/****************************************************************************
+ *
  * NAME: APP_vDeviceTemperatureInit
  *
  * DESCRIPTION:
  * Init Device Temperature
  *
- * RETURNS:
- * void
  ****************************************************************************/
 PUBLIC void APP_vDeviceTemperatureInit(void)
 {
     vAHI_ApConfigure(E_AHI_AP_REGULATOR_ENABLE,
-        E_AHI_AP_INT_DISABLE,
-        E_AHI_AP_SAMPLE_8,
-        E_AHI_AP_CLOCKDIV_500KHZ,
-        E_AHI_AP_INTREF);
+                     E_AHI_AP_INT_DISABLE,
+                     E_AHI_AP_SAMPLE_8,
+                     E_AHI_AP_CLOCKDIV_500KHZ,
+                     E_AHI_AP_INTREF);
 
-    while (!bAHI_APRegulatorEnabled());
+    while (!bAHI_APRegulatorEnabled())
+        ;
 
-    DBG_vPrintf(TRACE_DEVICE_TEMPERATURE, "\nAPP: InitDeviceTemperature");
+    DBG_vPrintf(TRACE_DEVICE_TEMPERATURE, "APP: Init Device Temperature\n");
 
-    ZTIMER_eStart(u8TimerDeviceTempSample, ZTIMER_TIME_MSEC(10));
+    ZTIMER_eStart(u8TimerDeviceTemperature, ZTIMER_TIME_MSEC(10));
 }
 
-/******************************************************************************
+/****************************************************************************
+ *
+ * NAME: APP_cbTimerDeviceTemperatureUpdate
+ *
+ * DESCRIPTION:
+ * CallBack For Device Temperature update
+ *
+ ****************************************************************************/
+PUBLIC void APP_cbTimerDeviceTemperatureUpdate(void *pvParam)
+{
+    int16 i16DeviceTemperature = APP_i16GetDeviceTemperature();
+
+    DBG_vPrintf(TRACE_DEVICE_TEMPERATURE, "APP: Temp = %d C\n", i16DeviceTemperature);
+
+    sLumiRouter.sDeviceTemperatureConfigurationServerCluster.i16CurrentTemperature = i16DeviceTemperature;
+
+    ZTIMER_eStart(u8TimerDeviceTemperature, ZTIMER_TIME_SEC(DEVICE_TEMPERATURE_SAMPLING_TIME_IN_SEC));
+}
+
+/****************************************************************************/
+/***        Local Functions                                               ***/
+/****************************************************************************/
+
+/****************************************************************************
+ *
  * NAME: APP_i16GetDeviceTemperature
  *
  * DESCRIPTION:
@@ -109,73 +139,44 @@ PUBLIC void APP_vDeviceTemperatureInit(void)
  *
  * RETURNS:
  * Device Temperature
+ *
  ****************************************************************************/
-PUBLIC int16 APP_i16GetDeviceTemperature(void)
+PRIVATE int16 APP_i16GetDeviceTemperature(void)
 {
     uint16 u16AdcTempSensor;
-    int16 i16DeviceTemperature;
 
     vAHI_AdcEnable(E_AHI_ADC_SINGLE_SHOT, E_AHI_AP_INPUT_RANGE_2, E_AHI_ADC_SRC_TEMP);
     vAHI_AdcStartSample();
 
-    while(bAHI_AdcPoll());
+    while (bAHI_AdcPoll())
+        ;
 
     u16AdcTempSensor = u16AHI_AdcRead();
-    i16DeviceTemperature = i16ConvertChipTemp(u16AdcTempSensor);
 
-    return i16DeviceTemperature;
+    return APP_i16ConvertChipTemp(u16AdcTempSensor);
 }
 
 /****************************************************************************
  *
- * NAME: APP_cbTimerDeviceTempSample
- *
- * DESCRIPTION:
- * CallBack For Device Temperature sampling
- *
- * RETURNS:
- * void
- ****************************************************************************/
-PUBLIC void APP_cbTimerDeviceTempSample(void *pvParam)
-{
-    int16 i16DeviceTemperature;
-
-    i16DeviceTemperature = APP_i16GetDeviceTemperature();
-
-    DBG_vPrintf(TRACE_DEVICE_TEMPERATURE, "Temp = %d C\n", i16DeviceTemperature);
-
-    sDevice.sDeviceTemperatureConfigurationServerCluster.i16CurrentTemperature = i16DeviceTemperature;
-
-    ZTIMER_eStart(u8TimerDeviceTempSample, ZTIMER_TIME_MSEC(1000 * DEVICE_TEMPERATURE_SAMPLING_TIME_IN_SECONDS));
-}
-
-/****************************************************************************/
-/***        Local Functions                                               ***/
-/****************************************************************************/
-
-/******************************************************************************
- * NAME: i16ConvertChipTemp
+ * NAME: APP_i16ConvertChipTemp
  *
  * DESCRIPTION:
  * Helper Function to convert 10bit ADC reading to degrees C
  * Formula: DegC = Typical DegC - ((Reading12 - Typ12) * ScaleFactor)
  * Where C = 25 and temps sensor output 730mv at 25C (from datasheet)
  * As we use 2Vref and 10bit adc this gives (730/2400)*4096  [=Typ12 =1210]
- * Scale factor is half the 0.706 data-sheet resolution DegC/LSB (2Vref) 
- * 
+ * Scale factor is half the 0.706 data-sheet resolution DegC/LSB (2Vref)
+ *
  * PARAMETERS:      Name            Usage
  * uint16           u16AdcValue     Adc Temperature Value
  *
  * RETURNS:
- * Chip Temperature in DegC 
+ * Chip Temperature in DegC
+ *
  ****************************************************************************/
-PRIVATE int16 i16ConvertChipTemp(uint16 u16AdcValue)
+PRIVATE int16 APP_i16ConvertChipTemp(uint16 u16AdcValue)
 {
-    int16 i16Centigrade;
-
-    i16Centigrade = (int16) ((int32) 25 - ((((int32) (u16AdcValue * 4) - (int32) 1210) * (int32) 353) / (int32) 1000));
-
-    return (i16Centigrade);
+    return (int16)((int32)25 - ((((int32)(u16AdcValue * 4) - (int32)1210) * (int32)353) / (int32)1000));
 }
 
 /****************************************************************************/

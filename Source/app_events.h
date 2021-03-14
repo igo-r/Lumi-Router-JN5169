@@ -1,13 +1,14 @@
-/*****************************************************************************
+/****************************************************************************
  *
- * MODULE:             JN-AN-1217
+ * MODULE:              Lumi Router
  *
- * COMPONENT:          app_events.h
+ * COMPONENT:           app_events.h
  *
- * DESCRIPTION:        Base Device application - generic event definitions
+ * DESCRIPTION:         Generic event definitions
  *
  ****************************************************************************
- * * This software is owned by NXP B.V. and/or its supplier and is protected
+ *
+ * This software is owned by NXP B.V. and/or its supplier and is protected
  * under applicable copyright laws. All rights are reserved. We grant You,
  * and any third parties, a license to use this software solely and
  * exclusively on NXP products [NXP Microcontrollers such as JN5168, JN5179].
@@ -29,55 +30,38 @@
  *
  * Copyright NXP B.V. 2016. All rights reserved
  *
- ***************************************************************************/
+ ****************************************************************************/
 
-#ifndef APP_GENERIC_EVENTS_H_
-#define APP_GENERIC_EVENTS_H_
+#ifndef APP_EVENTS_H
+#define APP_EVENTS_H
+
+/****************************************************************************/
+/***        Include Files                                                 ***/
+/****************************************************************************/
 
 /****************************************************************************/
 /***        Macro Definitions                                             ***/
 /****************************************************************************/
 
-
-/****************************************************************************/
 /***        Type Definitions                                              ***/
 /****************************************************************************/
-typedef enum
-{
-    APP_E_EVENT_NONE = 0,
-    APP_E_EVENT_BUTTON_UP,
-    APP_E_EVENT_BUTTON_DOWN,
-    APP_E_EVENT_PGM_BUTTON_UP,
-    APP_E_EVENT_PGM_BUTTON_DOWN,
-    APP_E_EVENT_LEAVE_AND_RESET,
-    APP_E_EVENT_MAX
-} APP_teEventType;
 
-typedef struct
-{
-    uint8 u8Button;
-    uint32 u32DIOState;
-} APP_tsEventButton;
+typedef enum { APP_E_EVENT_NONE = 0, APP_E_EVENT_LEAVE_AND_RESET } APP_teEventType;
 
-typedef struct
-{
+typedef struct {
     APP_teEventType eType;
-    union
-    {
-        APP_tsEventButton                   sButton;
-    }uEvent;
 } APP_tsEvent;
+
+/****************************************************************************/
+/***        Exported Variables                                            ***/
+/****************************************************************************/
 
 /****************************************************************************/
 /***        Exported Functions                                            ***/
 /****************************************************************************/
 
 /****************************************************************************/
-/***        External Variables                                            ***/
+/***        END OF FILE                                                   ***/
 /****************************************************************************/
 
-/****************************************************************************/
-/****************************************************************************/
-/****************************************************************************/
-
-#endif /*APP_GENERIC_EVENTS_H_*/
+#endif /* APP_EVENTS_H */

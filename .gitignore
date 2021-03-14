@@ -1,13 +1,11 @@
 Build/*.d
 Build/*.o
-Build/*.elf
 Build/*.bin
+Build/*.elf
 Build/*.map
-Build/*.json
-Source/zps_gen.*
 Source/pdum_apdu.S
 Source/pdum_gen.*
-size.txt
+Source/zps_gen.*
 
 # MacOS indexing file
 .DS_Store

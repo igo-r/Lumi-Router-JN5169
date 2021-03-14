@@ -1,10 +1,10 @@
-/*****************************************************************************
+/****************************************************************************
  *
- * MODULE:             JN-AN-1217
+ * MODULE:              Lumi Router
  *
- * COMPONENT:          uart.c
+ * COMPONENT:           uart.c
  *
- * DESCRIPTION:        UART interface for Base Device application
+ * DESCRIPTION:         UART interface
  *
  ****************************************************************************
  *
@@ -33,24 +33,29 @@
  ****************************************************************************/
 
 /****************************************************************************/
-/***        Include files                                                 ***/
+/***        Include Files                                                 ***/
 /****************************************************************************/
 
 #include <jendefs.h>
-#include "AppHardwareApi.h"
+#include <stdlib.h>
 
-#include "dbg.h"
-
-#include "uart.h"
-#include "ZQueue.h"
+/* Application */
 #include "app_main.h"
+#include "uart.h"
+
+/* SDK JN-SW-4170 */
+#include "AppHardwareApi.h"
+#include "ZQueue.h"
+#include "dbg.h"
 
 /****************************************************************************/
 /***        Macro Definitions                                             ***/
 /****************************************************************************/
 
-#ifndef TRACE_UART
-#define TRACE_UART  TRUE
+#ifdef DEBUG_UART
+#define TRACE_UART TRUE
+#else
+#define TRACE_UART FALSE
 #endif
 
 /* default to uart 0 */
@@ -58,22 +63,17 @@
 #define UART E_AHI_UART_0
 #endif
 
-#if (UART != E_AHI_UART_0 && UART != E_AHI_UART_1)
-#error UART must be either 0 or 1
-#endif
-
 /* default BAUD rate 9600 */
 #ifndef UART_BAUD_RATE
-#define UART_BAUD_RATE        115200
+#define UART_BAUD_RATE 115200
 #endif
 
-#define UART_LCR_OFFSET     0x0C
-#define UART_DLM_OFFSET     0x04
-
 #if (UART == E_AHI_UART_0)
-#define UART_START_ADR      0x02003000UL
+#define UART_START_ADR 0x02003000UL
 #elif (UART == E_AHI_UART_1)
-#define UART_START_ADR      0x02004000UL
+#define UART_START_ADR 0x02004000UL
+#else
+#error UART must be either 0 or 1
 #endif
 
 /****************************************************************************/
@@ -84,6 +84,8 @@
 /***        Local Function Prototypes                                     ***/
 /****************************************************************************/
 
+PRIVATE void UART_vSetBaudRate(uint32 u32BaudRate);
+
 /****************************************************************************/
 /***        Exported Variables                                            ***/
 /****************************************************************************/
@@ -92,31 +94,20 @@
 /***        Local Variables                                               ***/
 /****************************************************************************/
 
+PRIVATE uint8 txbuf[16];
+PRIVATE uint8 rxbuf[127];
+
 /****************************************************************************/
 /***        Exported Functions                                            ***/
 /****************************************************************************/
-
-/****************************************************************************/
-/***        Local Functions                                               ***/
-/****************************************************************************/
-
-uint8 txbuf[16];
-uint8 rxbuf[127];
 
 /****************************************************************************
  *
  * NAME: UART_vInit
  *
  * DESCRIPTION:
+ * Initialising UART
  *
- * PARAMETERS:      Name            RW  Usage
- * None.
- *
- * RETURNS:
- * None.
- *
- * NOTES:
- * None.
  ****************************************************************************/
 PUBLIC void UART_vInit(void)
 {
@@ -140,73 +131,16 @@ PUBLIC void UART_vInit(void)
 
 /****************************************************************************
  *
- * NAME: UART_vSetBaudRate
- *
- * DESCRIPTION:
- *
- * PARAMETERS: Name        RW  Usage
- *
- * RETURNS:
- *
- ****************************************************************************/
-
-PUBLIC void UART_vSetBaudRate(uint32 u32BaudRate)
-{
-    uint16    u16Divisor      =  0;
-    uint32    u32Remainder;
-    uint8     u8ClocksPerBit  =  16;
-    uint32    u32CalcBaudRate =  0;
-    int32     i32BaudError    =  0x7FFFFFFF;
-
-    while (abs(i32BaudError) > (int32)(u32BaudRate >> 4)) /* 6.25% (100/16) error */
-    {
-        if (--u8ClocksPerBit < 3)
-        {
-            return;
-        }
-
-        /* Calculate Divisor register = 16MHz / (16 x baud rate) */
-        u16Divisor = (uint16)(16000000UL / ((u8ClocksPerBit+1) * u32BaudRate));
-
-        /* Correct for rounding errors */
-        u32Remainder = (uint32)(16000000UL % ((u8ClocksPerBit+1) * u32BaudRate));
-
-        if (u32Remainder >= (((u8ClocksPerBit+1) * u32BaudRate) / 2))
-        {
-            u16Divisor += 1;
-        }
-
-        u32CalcBaudRate = (16000000UL / ((u8ClocksPerBit+1) * u16Divisor));
-
-        i32BaudError = (int32)u32CalcBaudRate - (int32)u32BaudRate;
-    }
-
-    /* Set the calculated clocks per bit */
-    vAHI_UartSetClocksPerBit(UART, u8ClocksPerBit);
-
-    /* Set the calculated divisor */
-    vAHI_UartSetBaudDivisor(UART, u16Divisor);
-}
-
-/****************************************************************************
- *
  * NAME: APP_isrUart
  *
- * DESCRIPTION: Handle interrupts from uart
+ * DESCRIPTION:
+ * Handle interrupts from uart
  *
- * PARAMETERS:      Name            RW  Usage
- * None.
- *
- * RETURNS:
- * None.
- *
- * NOTES:
- * None.
  ****************************************************************************/
-void APP_isrUart(void)
+PUBLIC void APP_isrUart(void)
 {
-    uint32    u32ItemBitmap = ((*((volatile uint32 *)(UART_START_ADR + 0x08))) >> 1) & 0x0007;
-    uint8     u8Byte;
+    uint32 u32ItemBitmap = ((*((volatile uint32 *)(UART_START_ADR + 0x08))) >> 1) & 0x0007;
+    uint8 u8Byte;
 
     if (u32ItemBitmap & E_AHI_UART_INT_RXDATA) {
         u8Byte = u8AHI_UartReadData(UART);
@@ -216,41 +150,13 @@ void APP_isrUart(void)
         if (ZQ_bQueueReceive(&APP_msgSerialTx, &u8Byte)) {
             UART_vSetTxInterrupt(TRUE);
             vAHI_UartWriteData(UART, u8Byte);
-        } else {
+        }
+        else {
             /* disable tx interrupt as nothing to send */
             UART_vSetTxInterrupt(FALSE);
         }
     }
 }
-
-/****************************************************************************
- *
- * NAME: UART_vRtsStopFlow
- *
- * DESCRIPTION:
- * Set UART RS-232 RTS line high to stop any further data coming in
- *
- ****************************************************************************/
-
-PUBLIC void UART_vRtsStopFlow(void)
-{
-    vAHI_UartSetControl(UART, FALSE, FALSE, E_AHI_UART_WORD_LEN_8, TRUE, E_AHI_UART_RTS_HIGH);
-}
-
-/****************************************************************************
- *
- * NAME: UART_vRtsStartFlow
- *
- * DESCRIPTION:
- * Set UART RS-232 RTS line low to allow further data
- *
- ****************************************************************************/
-
-PUBLIC void UART_vRtsStartFlow(void)
-{
-    vAHI_UartSetControl(UART, FALSE, FALSE, E_AHI_UART_WORD_LEN_8, TRUE, E_AHI_UART_RTS_LOW);
-}
-/* [I SP001222_P1 283] end */
 
 /****************************************************************************
  *
@@ -262,9 +168,7 @@ PUBLIC void UART_vRtsStartFlow(void)
  ****************************************************************************/
 PUBLIC void UART_vTxChar(uint8 u8Char)
 {
-    while (!UART_bTxReady() && !(u8AHI_UartReadLineStatus(E_AHI_UART_0) & E_AHI_UART_LS_TEMT));
     vAHI_UartWriteData(UART, u8Char);
-    while (!UART_bTxReady() && !(u8AHI_UartReadLineStatus(E_AHI_UART_0) & E_AHI_UART_LS_TEMT));
 }
 
 /****************************************************************************
@@ -291,6 +195,79 @@ PUBLIC bool_t UART_bTxReady()
 PUBLIC void UART_vSetTxInterrupt(bool_t bState)
 {
     vAHI_UartSetInterrupt(UART, FALSE, FALSE, bState, TRUE, E_AHI_UART_FIFO_LEVEL_1);
+}
+
+/****************************************************************************
+ *
+ * NAME: UART_vRtsStartFlow
+ *
+ * DESCRIPTION:
+ * Set UART RS-232 RTS line low to allow further data
+ *
+ ****************************************************************************/
+PUBLIC void UART_vRtsStartFlow(void)
+{
+    vAHI_UartSetControl(UART, FALSE, FALSE, E_AHI_UART_WORD_LEN_8, TRUE, E_AHI_UART_RTS_LOW);
+}
+
+/****************************************************************************
+ *
+ * NAME: UART_vRtsStopFlow
+ *
+ * DESCRIPTION:
+ * Set UART RS-232 RTS line high to stop any further data coming in
+ *
+ ****************************************************************************/
+PUBLIC void UART_vRtsStopFlow(void)
+{
+    vAHI_UartSetControl(UART, FALSE, FALSE, E_AHI_UART_WORD_LEN_8, TRUE, E_AHI_UART_RTS_HIGH);
+}
+
+/****************************************************************************/
+/***        Local Functions                                               ***/
+/****************************************************************************/
+
+/****************************************************************************
+ *
+ * NAME: UART_vSetBaudRate
+ *
+ * DESCRIPTION:
+ * Set baud rates UART
+ *
+ ****************************************************************************/
+PRIVATE void UART_vSetBaudRate(uint32 u32BaudRate)
+{
+    uint16 u16Divisor = 0;
+    uint32 u32Remainder;
+    uint8 u8ClocksPerBit = 16;
+    uint32 u32CalcBaudRate = 0;
+    int32 i32BaudError = 0x7FFFFFFF;
+
+    while (abs(i32BaudError) > (int32)(u32BaudRate >> 4)) {
+        if (--u8ClocksPerBit < 3) {
+            return;
+        }
+
+        /* Calculate Divisor register = 16MHz / (16 x baud rate) */
+        u16Divisor = (uint16)(16000000UL / ((u8ClocksPerBit + 1) * u32BaudRate));
+
+        /* Correct for rounding errors */
+        u32Remainder = (uint32)(16000000UL % ((u8ClocksPerBit + 1) * u32BaudRate));
+
+        if (u32Remainder >= (((u8ClocksPerBit + 1) * u32BaudRate) / 2)) {
+            u16Divisor += 1;
+        }
+
+        u32CalcBaudRate = (16000000UL / ((u8ClocksPerBit + 1) * u16Divisor));
+
+        i32BaudError = (int32)u32CalcBaudRate - (int32)u32BaudRate;
+    }
+
+    /* Set the calculated clocks per bit */
+    vAHI_UartSetClocksPerBit(UART, u8ClocksPerBit);
+
+    /* Set the calculated divisor */
+    vAHI_UartSetBaudDivisor(UART, u16Divisor);
 }
 
 /****************************************************************************/

@@ -23,7 +23,7 @@
 				</dictionary>
 				<dictionary>
 					<key>org.eclipse.cdt.make.core.buildArguments</key>
-					<value>LIGHT=DimmableLight OTA=1 TRACE=0</value>
+					<value></value>
 				</dictionary>
 				<dictionary>
 					<key>org.eclipse.cdt.make.core.buildCommand</key>
@@ -31,7 +31,7 @@
 				</dictionary>
 				<dictionary>
 					<key>org.eclipse.cdt.make.core.buildLocation</key>
-					<value>${ProjDirPath}/Common_Light/Build/ </value>
+					<value>${ProjDirPath}/Build</value>
 				</dictionary>
 				<dictionary>
 					<key>org.eclipse.cdt.make.core.cleanBuildTarget</key>
@@ -55,7 +55,7 @@
 				</dictionary>
 				<dictionary>
 					<key>org.eclipse.cdt.make.core.fullBuildTarget</key>
-					<value>all </value>
+					<value>all</value>
 				</dictionary>
 				<dictionary>
 					<key>org.eclipse.cdt.make.core.stopOnError</key>
@@ -82,12 +82,17 @@
 		<link>
 			<name>Build</name>
 			<type>2</type>
-			<location>C:/NXP/bstudio_nxp/workspace/Lumi-Router-JN5169/Build</location>
+			<location>PROJECT_LOC/Build</location>
 		</link>
 		<link>
 			<name>Source</name>
 			<type>2</type>
-			<location>C:/NXP/bstudio_nxp/workspace/Lumi-Router-JN5169/Source</location>
+			<location>PROJECT_LOC/Source</location>
+		</link>
+		<link>
+			<name>JN-SW-4170</name>
+			<type>2</type>
+			<locationURI>ECLIPSE_HOME/sdk/JN-SW-4170</locationURI>
 		</link>
 	</linkedResources>
 </projectDescription>

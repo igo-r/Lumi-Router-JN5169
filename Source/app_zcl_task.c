@@ -1,10 +1,10 @@
-/*****************************************************************************
+/****************************************************************************
  *
-* MODULE:              JN-AN-1217
+ * MODULE:              Lumi Router
  *
- * COMPONENT:          app_zcl_task.c
+ * COMPONENT:           app_zcl_task.c
  *
- * DESCRIPTION:       Base Device application - ZCL Interface
+ * DESCRIPTION:         ZCL Interface
  *
  ****************************************************************************
  *
@@ -30,78 +30,81 @@
  *
  * Copyright NXP B.V. 2016. All rights reserved
  *
- ***************************************************************************/
+ ****************************************************************************/
 
 /****************************************************************************/
-/***        Include files                                                 ***/
+/***        Include Files                                                 ***/
 /****************************************************************************/
 
 #include <jendefs.h>
-#include <AppApi.h>
-#include "pdum_apl.h"
-#include "pdum_gen.h"
-#include "PDM.h"
-#include "dbg.h"
-#include "zps_gen.h"
-#include "PDM_IDs.h"
-#include "ZTimer.h"
-#include "zcl.h"
-#include "zcl_options.h"
-#include "app_zcl_task.h"
-#include "app_router_node.h"
-#include "app_common.h"
-#include "app_main.h"
-#include "app_events.h"
 #include <string.h>
+
+/* Generated */
+#include "pdum_gen.h"
+#include "zps_gen.h"
+
+/* Application */
+#include "app_main.h"
 #include "app_reporting.h"
+#include "app_zcl_task.h"
+#include "zcl_options.h"
+
+/* SDK JN-SW-4170 */
 #include "Basic.h"
-#include "Identify.h"
-#include "Groups.h"
 #include "DeviceTemperatureConfiguration.h"
+#include "Groups.h"
+#include "Identify.h"
+#include "ZTimer.h"
+#include "bdb_api.h"
+#include "dbg.h"
+#include "zcl.h"
 
 /****************************************************************************/
 /***        Macro Definitions                                             ***/
 /****************************************************************************/
 
 #ifdef DEBUG_ZCL
-#define TRACE_ZCL   TRUE
+#define TRACE_ZCL TRUE
 #else
-#define TRACE_ZCL   FALSE
+#define TRACE_ZCL FALSE
 #endif
 
-
+#define ZCL_TICK_TIME ZTIMER_TIME_MSEC(100)
 
 /****************************************************************************/
 /***        Type Definitions                                              ***/
 /****************************************************************************/
 
-#define ZCL_TICK_TIME           ZTIMER_TIME_MSEC(100)
-
-
 /****************************************************************************/
 /***        Local Function Prototypes                                     ***/
 /****************************************************************************/
+
 PRIVATE void APP_ZCL_cbGeneralCallback(tsZCL_CallBackEvent *psEvent);
 PRIVATE void APP_ZCL_cbEndpointCallback(tsZCL_CallBackEvent *psEvent);
-PUBLIC void APP_vHandleIdentify(uint16 u16Time);
-PRIVATE void APP_vHandleClusterCustomCommands(tsZCL_CallBackEvent *psEvent);
-PRIVATE void APP_vHandleClusterUpdate(tsZCL_CallBackEvent *psEvent);
-PRIVATE teZCL_Status registerLumiRouterEndPoint(uint8 u8EndPointIdentifier,
-                                    tfpZCL_ZCLCallBackFunction cbCallBack,
-                                    ts_LumiRouter* psDeviceInfo);
-PRIVATE void APP_vZCL_DeviceSpecific_Init(void);
+PRIVATE void APP_ZCL_vHandleIdentify(uint16 u16Time);
+PRIVATE void APP_ZCL_vHandleClusterCustomCommands(tsZCL_CallBackEvent *psEvent);
+PRIVATE void APP_ZCL_vHandleClusterUpdate(tsZCL_CallBackEvent *psEvent);
+PRIVATE teZCL_Status APP_ZCL_eRegisterLumiRouterEndPoint(uint8 u8EndPointIdentifier,
+                                                         tfpZCL_ZCLCallBackFunction cbCallBack,
+                                                         APP_tsLumiRouter *psDeviceInfo);
+PRIVATE void APP_ZCL_vDeviceSpecific_Init(void);
+
 /****************************************************************************/
 /***        Exported Variables                                            ***/
 /****************************************************************************/
 
-ts_LumiRouter sDevice;
+PUBLIC APP_tsLumiRouter sLumiRouter;
 
 /****************************************************************************/
 /***        Local Variables                                               ***/
 /****************************************************************************/
+
 PRIVATE uint8 u8IdentifyCount = 0;
 PRIVATE bool_t bIdentifyState = FALSE;
 
+/****************************************************************************/
+/***        Exported Functions                                            ***/
+/****************************************************************************/
 
 /****************************************************************************
  *
@@ -109,9 +112,6 @@ PRIVATE bool_t bIdentifyState = FALSE;
  *
  * DESCRIPTION:
  * Initialises ZCL related functions
- *
- * RETURNS:
- * void
  *
  ****************************************************************************/
 PUBLIC void APP_ZCL_vInitialise(void)
@@ -121,28 +121,20 @@ PUBLIC void APP_ZCL_vInitialise(void)
     /* Initialise ZLL */
     eZCL_Status = eZCL_Initialise(&APP_ZCL_cbGeneralCallback, apduZCL);
     if (eZCL_Status != E_ZCL_SUCCESS)
-    {
-        DBG_vPrintf(TRACE_ZCL, "\nErr: eZLO_Initialise:%d", eZCL_Status);
-    }
+        DBG_vPrintf(TRACE_ZCL, "Err: eZLO_Initialise:%d\n", eZCL_Status);
 
     /* Start the tick timer */
-    if(ZTIMER_eStart(u8TimerZCL, ZCL_TICK_TIME) != E_ZTIMER_OK)
-    {
+    if (ZTIMER_eStart(u8TimerTick, ZCL_TICK_TIME) != E_ZTIMER_OK)
         DBG_vPrintf(TRACE_ZCL, "APP: Failed to Start Tick Timer\n");
-    }
 
     /* Register Light EndPoint */
-    eZCL_Status =  registerLumiRouterEndPoint(ROUTER_APPLICATION_ENDPOINT,
-                                              &APP_ZCL_cbEndpointCallback,
-                                              &sDevice);
+    eZCL_Status =
+        APP_ZCL_eRegisterLumiRouterEndPoint(LUMIROUTER_APPLICATION_ENDPOINT, &APP_ZCL_cbEndpointCallback, &sLumiRouter);
     if (eZCL_Status != E_ZCL_SUCCESS)
-    {
-            DBG_vPrintf(TRACE_ZCL, "Error: registerLumiRouterEndPoint: %02x\r\n", eZCL_Status);
-    }
+        DBG_vPrintf(TRACE_ZCL, "Error: APP_ZCL_eRegisterLumiRouterEndPoint: %02x\r\n", eZCL_Status);
 
-    APP_vZCL_DeviceSpecific_Init();
+    APP_ZCL_vDeviceSpecific_Init();
 }
-
 
 /****************************************************************************
  *
@@ -151,56 +143,10 @@ PUBLIC void APP_ZCL_vInitialise(void)
  * DESCRIPTION:
  * Sets the remaining time in the identify cluster
  *
- * RETURNS:
- * void
- *
  ****************************************************************************/
 PUBLIC void APP_ZCL_vSetIdentifyTime(uint16 u16Time)
 {
-    sDevice.sIdentifyServerCluster.u16IdentifyTime = u16Time;
-}
-
-
-/****************************************************************************
- *
- * NAME: APP_cbTimerZclTick
- *
- * DESCRIPTION:
- * Task kicked by the tick timer
- *
- * RETURNS:
- * void
- *
- ****************************************************************************/
-PUBLIC void APP_cbTimerZclTick(void *pvParam)
-{
-    static uint32 u32Tick10ms = 9;
-    static uint32 u32Tick1Sec = 99;
-
-    tsZCL_CallBackEvent sCallBackEvent;
-
-    if(ZTIMER_eStart(u8TimerZCL, ZTIMER_TIME_MSEC(10)) != E_ZTIMER_OK)
-    {
-        DBG_vPrintf(TRACE_ZCL, "APP: Failed to Start Tick Timer\n");
-    }
-
-    u32Tick10ms++;
-    u32Tick1Sec++;
-
-    /* Wrap the Tick10ms counter and provide 100ms ticks to cluster */
-    if (u32Tick10ms > 9)
-    {
-        eZCL_Update100mS();
-        u32Tick10ms = 0;
-    }
-    /* Wrap the 1 second  counter and provide 1Hz ticks to cluster */
-    if(u32Tick1Sec > 99)
-    {
-        u32Tick1Sec = 0;
-        sCallBackEvent.pZPSevent = NULL;
-        sCallBackEvent.eEventType = E_ZCL_CBET_TIMER;
-        vZCL_EventHandler(&sCallBackEvent);
-    }
+    sLumiRouter.sIdentifyServerCluster.u16IdentifyTime = u16Time;
 }
 
 /****************************************************************************
@@ -209,9 +155,6 @@ PUBLIC void APP_cbTimerZclTick(void *pvParam)
  *
  * DESCRIPTION:
  * Main ZCL processing task
- *
- * RETURNS:
- * void
  *
  ****************************************************************************/
 PUBLIC void APP_ZCL_vEventHandler(ZPS_tsAfEvent *psStackEvent)
@@ -222,17 +165,70 @@ PUBLIC void APP_ZCL_vEventHandler(ZPS_tsAfEvent *psStackEvent)
     DBG_vPrintf(TRACE_ZCL, "ZCL_Task endpoint event:%d \n", psStackEvent->eType);
     sCallBackEvent.eEventType = E_ZCL_CBET_ZIGBEE_EVENT;
     vZCL_EventHandler(&sCallBackEvent);
-
 }
 
-PUBLIC uint8 app_u8GetDeviceEndpoint( void)
+/****************************************************************************
+ *
+ * NAME: APP_cbTimerZclTick
+ *
+ * DESCRIPTION:
+ * Task kicked by the tick timer
+ *
+ ****************************************************************************/
+PUBLIC void APP_cbTimerZclTick(void *pvParam)
 {
-    return ROUTER_APPLICATION_ENDPOINT;
+    static uint32 u32Tick10ms = 9;
+    static uint32 u32Tick1Sec = 99;
+
+    tsZCL_CallBackEvent sCallBackEvent;
+
+    if (ZTIMER_eStart(u8TimerTick, ZTIMER_TIME_MSEC(10)) != E_ZTIMER_OK)
+        DBG_vPrintf(TRACE_ZCL, "APP: Failed to Start Tick Timer\n");
+
+    u32Tick10ms++;
+    u32Tick1Sec++;
+
+    /* Wrap the Tick10ms counter and provide 100ms ticks to cluster */
+    if (u32Tick10ms > 9) {
+        eZCL_Update100mS();
+        u32Tick10ms = 0;
+    }
+
+    /* Wrap the 1 second  counter and provide 1Hz ticks to cluster */
+    if (u32Tick1Sec > 99) {
+        u32Tick1Sec = 0;
+        sCallBackEvent.pZPSevent = NULL;
+        sCallBackEvent.eEventType = E_ZCL_CBET_TIMER;
+        vZCL_EventHandler(&sCallBackEvent);
+    }
 }
+
+#ifdef CLD_IDENTIFY_10HZ_TICK
+/****************************************************************************
+ *
+ * NAME: vIdEffectTick
+ *
+ * DESCRIPTION:
+ * ZLO Device Specific identify tick
+ *
+ ****************************************************************************/
+PUBLIC void vIdEffectTick(uint8 u8Endpoint)
+{
+
+    if ((u8Endpoint == LUMIROUTER_APPLICATION_ENDPOINT) && (sLumiRouter.sIdentifyServerCluster.u16IdentifyTime > 0)) {
+        u8IdentifyCount--;
+        if (u8IdentifyCount == 0) {
+            u8IdentifyCount = 5;
+            bIdentifyState = (bIdentifyState) ? FALSE : TRUE;
+        }
+    }
+}
+#endif
 
 /****************************************************************************/
 /***        Local Functions                                               ***/
 /****************************************************************************/
+
 /****************************************************************************
  *
  * NAME: APP_ZCL_cbGeneralCallback
@@ -240,14 +236,10 @@ PUBLIC uint8 app_u8GetDeviceEndpoint( void)
  * DESCRIPTION:
  * General callback for ZCL events
  *
- * RETURNS:
- * void
- *
  ****************************************************************************/
 PRIVATE void APP_ZCL_cbGeneralCallback(tsZCL_CallBackEvent *psEvent)
 {
-    switch (psEvent->eEventType)
-    {
+    switch (psEvent->eEventType) {
 
     case E_ZCL_CBET_LOCK_MUTEX:
         DBG_vPrintf(TRACE_ZCL, "\nEVT: Lock Mutex\r\n");
@@ -292,11 +284,8 @@ PRIVATE void APP_ZCL_cbGeneralCallback(tsZCL_CallBackEvent *psEvent)
     default:
         DBG_vPrintf(TRACE_ZCL, "\nInvalid event type");
         break;
-
     }
-
 }
-
 
 /****************************************************************************
  *
@@ -305,140 +294,128 @@ PRIVATE void APP_ZCL_cbGeneralCallback(tsZCL_CallBackEvent *psEvent)
  * DESCRIPTION:
  * Endpoint specific callback for ZCL events
  *
- * RETURNS:
- * void
- *
  ****************************************************************************/
 PRIVATE void APP_ZCL_cbEndpointCallback(tsZCL_CallBackEvent *psEvent)
 {
 
-    switch (psEvent->eEventType)
-    {
-        case E_ZCL_CBET_LOCK_MUTEX:
-            break;
-
-        case E_ZCL_CBET_UNLOCK_MUTEX:
-            break;
-
-        case E_ZCL_CBET_UNHANDLED_EVENT:
-            DBG_vPrintf(TRACE_ZCL, "\nEP EVT: Unhandled event");
-            break;
-
-        case E_ZCL_CBET_READ_INDIVIDUAL_ATTRIBUTE_RESPONSE:
-            DBG_vPrintf(TRACE_ZCL, "\nEP EVT: Rd Attr Rsp %04x AS %d", psEvent->uMessage.sIndividualAttributeResponse.u16AttributeEnum,
-                psEvent->uMessage.sIndividualAttributeResponse.eAttributeStatus);
-            break;
-
-        case E_ZCL_CBET_READ_ATTRIBUTES_RESPONSE:
-            DBG_vPrintf(TRACE_ZCL, "\nEP EVT: Read attributes response");
-            break;
-
-        case E_ZCL_CBET_READ_REQUEST:
-            DBG_vPrintf(TRACE_ZCL, "\nEP EVT: Read request");
-            break;
-
-        case E_ZCL_CBET_DEFAULT_RESPONSE:
-            DBG_vPrintf(TRACE_ZCL, "\nEP EVT: Default response");
-            break;
-
-        case E_ZCL_CBET_ERROR:
-            DBG_vPrintf(TRACE_ZCL, "\nEP EVT: Error");
-            break;
-
-        case E_ZCL_CBET_TIMER:
-            DBG_vPrintf(TRACE_ZCL, "\nEP EVT: Timer");
-            break;
-
-        case E_ZCL_CBET_ZIGBEE_EVENT:
-            DBG_vPrintf(TRACE_ZCL, "\nEP EVT: ZigBee");
-            break;
-
-        case E_ZCL_CBET_CLUSTER_CUSTOM:
-            DBG_vPrintf(TRACE_ZCL, "\nEP EVT: Custom Cl %04x\n", psEvent->uMessage.sClusterCustomMessage.u16ClusterId);
-            APP_vHandleClusterCustomCommands(psEvent);
+    switch (psEvent->eEventType) {
+    case E_ZCL_CBET_LOCK_MUTEX:
         break;
 
-        case E_ZCL_CBET_WRITE_INDIVIDUAL_ATTRIBUTE:
-            DBG_vPrintf(TRACE_ZCL, "\nEP EVT: Write Individual Attribute Status %02x\n", psEvent->eZCL_Status);
+    case E_ZCL_CBET_UNLOCK_MUTEX:
         break;
 
-        case E_ZCL_CBET_REPORT_INDIVIDUAL_ATTRIBUTE:
-        {
-            tsZCL_IndividualAttributesResponse    *psIndividualAttributeResponse = &psEvent->uMessage.sIndividualAttributeResponse;
-            DBG_vPrintf(TRACE_ZCL,"Individual Report attribute for Cluster = %d\n", psEvent->psClusterInstance->psClusterDefinition->u16ClusterEnum);
-            DBG_vPrintf(TRACE_ZCL,"eAttributeDataType = %d\n", psIndividualAttributeResponse->eAttributeDataType);
-            DBG_vPrintf(TRACE_ZCL,"u16AttributeEnum = %d\n", psIndividualAttributeResponse->u16AttributeEnum );
-            DBG_vPrintf(TRACE_ZCL,"eAttributeStatus = %d\n", psIndividualAttributeResponse->eAttributeStatus );
+    case E_ZCL_CBET_UNHANDLED_EVENT:
+        DBG_vPrintf(TRACE_ZCL, "\nEP EVT: Unhandled event");
+        break;
+
+    case E_ZCL_CBET_READ_INDIVIDUAL_ATTRIBUTE_RESPONSE:
+        DBG_vPrintf(TRACE_ZCL,
+                    "\nEP EVT: Rd Attr Rsp %04x AS %d",
+                    psEvent->uMessage.sIndividualAttributeResponse.u16AttributeEnum,
+                    psEvent->uMessage.sIndividualAttributeResponse.eAttributeStatus);
+        break;
+
+    case E_ZCL_CBET_READ_ATTRIBUTES_RESPONSE:
+        DBG_vPrintf(TRACE_ZCL, "\nEP EVT: Read attributes response");
+        break;
+
+    case E_ZCL_CBET_READ_REQUEST:
+        DBG_vPrintf(TRACE_ZCL, "\nEP EVT: Read request");
+        break;
+
+    case E_ZCL_CBET_DEFAULT_RESPONSE:
+        DBG_vPrintf(TRACE_ZCL, "\nEP EVT: Default response");
+        break;
+
+    case E_ZCL_CBET_ERROR:
+        DBG_vPrintf(TRACE_ZCL, "\nEP EVT: Error");
+        break;
+
+    case E_ZCL_CBET_TIMER:
+        DBG_vPrintf(TRACE_ZCL, "\nEP EVT: Timer");
+        break;
+
+    case E_ZCL_CBET_ZIGBEE_EVENT:
+        DBG_vPrintf(TRACE_ZCL, "\nEP EVT: ZigBee");
+        break;
+
+    case E_ZCL_CBET_CLUSTER_CUSTOM:
+        DBG_vPrintf(TRACE_ZCL, "\nEP EVT: Custom Cl %04x\n", psEvent->uMessage.sClusterCustomMessage.u16ClusterId);
+        APP_ZCL_vHandleClusterCustomCommands(psEvent);
+        break;
+
+    case E_ZCL_CBET_WRITE_INDIVIDUAL_ATTRIBUTE:
+        DBG_vPrintf(TRACE_ZCL, "\nEP EVT: Write Individual Attribute Status %02x\n", psEvent->eZCL_Status);
+        break;
+
+    case E_ZCL_CBET_REPORT_INDIVIDUAL_ATTRIBUTE: {
+        tsZCL_IndividualAttributesResponse *psIndividualAttributeResponse =
+            &psEvent->uMessage.sIndividualAttributeResponse;
+        DBG_vPrintf(TRACE_ZCL,
+                    "Individual Report attribute for Cluster = %d\n",
+                    psEvent->psClusterInstance->psClusterDefinition->u16ClusterEnum);
+        DBG_vPrintf(TRACE_ZCL, "eAttributeDataType = %d\n", psIndividualAttributeResponse->eAttributeDataType);
+        DBG_vPrintf(TRACE_ZCL, "u16AttributeEnum = %d\n", psIndividualAttributeResponse->u16AttributeEnum);
+        DBG_vPrintf(TRACE_ZCL, "eAttributeStatus = %d\n", psIndividualAttributeResponse->eAttributeStatus);
+    } break;
+
+    case E_ZCL_CBET_REPORT_INDIVIDUAL_ATTRIBUTES_CONFIGURE: {
+        tsZCL_AttributeReportingConfigurationRecord *psAttributeReportingRecord =
+            &psEvent->uMessage.sAttributeReportingConfigurationRecord;
+        DBG_vPrintf(
+            TRACE_ZCL,
+            "Individual Configure Report Cluster %d Attrib %d Type %d Min %d Max %d IntV %d Direcct %d Change %d\n",
+            psEvent->psClusterInstance->psClusterDefinition->u16ClusterEnum,
+            psAttributeReportingRecord->u16AttributeEnum,
+            psAttributeReportingRecord->eAttributeDataType,
+            psAttributeReportingRecord->u16MinimumReportingInterval,
+            psAttributeReportingRecord->u16MaximumReportingInterval,
+            psAttributeReportingRecord->u16TimeoutPeriodField,
+            psAttributeReportingRecord->u8DirectionIsReceived,
+            psAttributeReportingRecord->uAttributeReportableChange);
+
+        if (E_ZCL_SUCCESS == psEvent->eZCL_Status) {
+            APP_vSaveReportableRecord(psEvent->psClusterInstance->psClusterDefinition->u16ClusterEnum,
+                                      psAttributeReportingRecord);
         }
-            break;
-
-        case E_ZCL_CBET_REPORT_INDIVIDUAL_ATTRIBUTES_CONFIGURE:
-        {
-            tsZCL_AttributeReportingConfigurationRecord    *psAttributeReportingRecord = &psEvent->uMessage.sAttributeReportingConfigurationRecord;
-            DBG_vPrintf(TRACE_ZCL,"Individual Configure Report Cluster %d Attrib %d Type %d Min %d Max %d IntV %d Direcct %d Change %d\n",
-                    psEvent->psClusterInstance->psClusterDefinition->u16ClusterEnum,
-                    psAttributeReportingRecord->u16AttributeEnum,
-                    psAttributeReportingRecord->eAttributeDataType,
-                    psAttributeReportingRecord->u16MinimumReportingInterval,
-                    psAttributeReportingRecord->u16MaximumReportingInterval,
-                    psAttributeReportingRecord->u16TimeoutPeriodField,
-                    psAttributeReportingRecord->u8DirectionIsReceived,
-                    psAttributeReportingRecord->uAttributeReportableChange);
-
-            if (E_ZCL_SUCCESS == psEvent->eZCL_Status)
-            {
-
-                vSaveReportableRecord( psEvent->psClusterInstance->psClusterDefinition->u16ClusterEnum,
-                                       psAttributeReportingRecord);
-
-            }
-            else if(E_ZCL_RESTORE_DEFAULT_REPORT_CONFIGURATION == psEvent->eZCL_Status)
-            {
-
-                vRestoreDefaultRecord(app_u8GetDeviceEndpoint(),
-                		              psEvent->psClusterInstance->psClusterDefinition->u16ClusterEnum,
-                		              psAttributeReportingRecord);
-            }			
+        else if (E_ZCL_RESTORE_DEFAULT_REPORT_CONFIGURATION == psEvent->eZCL_Status) {
+            APP_vRestoreDefaultRecord(LUMIROUTER_APPLICATION_ENDPOINT,
+                                      psEvent->psClusterInstance->psClusterDefinition->u16ClusterEnum,
+                                      psAttributeReportingRecord);
         }
+    } break;
+
+    case E_ZCL_CBET_CLUSTER_UPDATE:
+        DBG_vPrintf(TRACE_ZCL, "Update Id %04x\n", psEvent->psClusterInstance->psClusterDefinition->u16ClusterEnum);
+        APP_ZCL_vHandleClusterUpdate(psEvent);
         break;
 
-        case E_ZCL_CBET_CLUSTER_UPDATE:
-            DBG_vPrintf(TRACE_ZCL, "Update Id %04x\n", psEvent->psClusterInstance->psClusterDefinition->u16ClusterEnum);
-            APP_vHandleClusterUpdate(psEvent);
-            break;
-        case E_ZCL_CBET_REPORT_REQUEST:
-            break;
+    case E_ZCL_CBET_REPORT_REQUEST:
+        break;
 
-        default:
-            DBG_vPrintf(TRACE_ZCL, "\nEP EVT: Invalid evt type 0x%x", (uint8)psEvent->eEventType);
-            break;
+    default:
+        DBG_vPrintf(TRACE_ZCL, "\nEP EVT: Invalid evt type 0x%x", (uint8)psEvent->eEventType);
+        break;
     }
 }
 
 /****************************************************************************
  *
- * NAME: APP_vHandleIdentify
+ * NAME: APP_ZCL_vHandleIdentify
  *
  * DESCRIPTION:
  * Application identify handler
  *
- * PARAMETER: void
- *
- * RETURNS: void
- *
  ****************************************************************************/
-PUBLIC void APP_vHandleIdentify(uint16 u16Time)
+PRIVATE void APP_ZCL_vHandleIdentify(uint16 u16Time)
 {
     static bool bActive = FALSE;
-    if (u16Time == 0)
-    {
-            /*
-             * Restore to off/off state
-             */
+    if (u16Time == 0) {
+        /* Restore to off/off state */
         bActive = FALSE;
     }
-    else
-    {
+    else {
         /* Set the Identify levels */
         if (!bActive) {
             bActive = TRUE;
@@ -448,96 +425,54 @@ PUBLIC void APP_vHandleIdentify(uint16 u16Time)
     }
 }
 
-#ifdef CLD_IDENTIFY_10HZ_TICK
 /****************************************************************************
  *
- * NAME: vIdEffectTick
- *
- * DESCRIPTION:
- * ZLO Device Specific identify tick
- *
- * PARAMETER: void
- *
- * RETURNS: void
- *
- ****************************************************************************/
-PUBLIC void vIdEffectTick(uint8 u8Endpoint)
-{
-
-    if ((u8Endpoint == ROUTER_APPLICATION_ENDPOINT) &&
-        (sDevice.sIdentifyServerCluster.u16IdentifyTime > 0 ))
-    {
-        u8IdentifyCount--;
-        if (u8IdentifyCount == 0)
-        {
-            u8IdentifyCount = 5;
-            bIdentifyState = (bIdentifyState)? FALSE: TRUE;
-        }
-    }
-}
-#endif
-
-/****************************************************************************
- *
- * NAME: APP_vHandleClusterCustomCommands
+ * NAME: APP_ZCL_vHandleClusterCustomCommands
  *
  * DESCRIPTION:
  * callback for ZCL cluster custom command events
  *
- * RETURNS:
- * void
- *
  ****************************************************************************/
-PRIVATE void APP_vHandleClusterCustomCommands(tsZCL_CallBackEvent *psEvent)
+PRIVATE void APP_ZCL_vHandleClusterCustomCommands(tsZCL_CallBackEvent *psEvent)
 {
-      switch(psEvent->uMessage.sClusterCustomMessage.u16ClusterId)
-    {
-        case GENERAL_CLUSTER_ID_IDENTIFY:
-        {
-            tsCLD_IdentifyCallBackMessage *psCallBackMessage = (tsCLD_IdentifyCallBackMessage*)psEvent->uMessage.sClusterCustomMessage.pvCustomData;
-            if (psCallBackMessage->u8CommandId == E_CLD_IDENTIFY_CMD_IDENTIFY)
-            {
-                APP_vHandleIdentify(sDevice.sIdentifyServerCluster.u16IdentifyTime);
-            }
+    switch (psEvent->uMessage.sClusterCustomMessage.u16ClusterId) {
+    case GENERAL_CLUSTER_ID_IDENTIFY: {
+        tsCLD_IdentifyCallBackMessage *psCallBackMessage =
+            (tsCLD_IdentifyCallBackMessage *)psEvent->uMessage.sClusterCustomMessage.pvCustomData;
+        if (psCallBackMessage->u8CommandId == E_CLD_IDENTIFY_CMD_IDENTIFY) {
+            APP_ZCL_vHandleIdentify(sLumiRouter.sIdentifyServerCluster.u16IdentifyTime);
         }
-        break;
+    } break;
 
-        case GENERAL_CLUSTER_ID_BASIC:
-        {
-            tsCLD_BasicCallBackMessage *psCallBackMessage = (tsCLD_BasicCallBackMessage*)psEvent->uMessage.sClusterCustomMessage.pvCustomData;
-            if (psCallBackMessage->u8CommandId == E_CLD_BASIC_CMD_RESET_TO_FACTORY_DEFAULTS )
-            {
-                DBG_vPrintf(TRACE_ZCL, "Basic Factory Reset Received\n");
-                memset(&sDevice,0,sizeof(ts_LumiRouter));
-                APP_vZCL_DeviceSpecific_Init();
-                registerLumiRouterEndPoint(ROUTER_APPLICATION_ENDPOINT,
-                                           &APP_ZCL_cbEndpointCallback,
-                                           &sDevice);
-            }
+    case GENERAL_CLUSTER_ID_BASIC: {
+        tsCLD_BasicCallBackMessage *psCallBackMessage =
+            (tsCLD_BasicCallBackMessage *)psEvent->uMessage.sClusterCustomMessage.pvCustomData;
+        if (psCallBackMessage->u8CommandId == E_CLD_BASIC_CMD_RESET_TO_FACTORY_DEFAULTS) {
+            DBG_vPrintf(TRACE_ZCL, "Basic Factory Reset Received\n");
+            memset(&sLumiRouter, 0, sizeof(APP_tsLumiRouter));
+            APP_ZCL_vDeviceSpecific_Init();
+            APP_ZCL_eRegisterLumiRouterEndPoint(LUMIROUTER_APPLICATION_ENDPOINT,
+                                                &APP_ZCL_cbEndpointCallback,
+                                                &sLumiRouter);
         }
-        break;
+    } break;
     }
 }
 
 /****************************************************************************
  *
- * NAME: APP_vHandleClusterUpdate
+ * NAME: APP_ZCL_vHandleClusterUpdate
  *
  * DESCRIPTION:
  * callback for ZCL cluster update events
  *
- * RETURNS:
- * void
- *
  ****************************************************************************/
-PRIVATE void APP_vHandleClusterUpdate(tsZCL_CallBackEvent *psEvent)
+PRIVATE void APP_ZCL_vHandleClusterUpdate(tsZCL_CallBackEvent *psEvent)
 {
-    if (psEvent->psClusterInstance->psClusterDefinition->u16ClusterEnum == GENERAL_CLUSTER_ID_IDENTIFY)
-    {
-        APP_vHandleIdentify(sDevice.sIdentifyServerCluster.u16IdentifyTime);
-        if(sDevice.sIdentifyServerCluster.u16IdentifyTime == 0)
-        {
-            tsBDB_ZCLEvent  sBDBZCLEvent;
+    if (psEvent->psClusterInstance->psClusterDefinition->u16ClusterEnum == GENERAL_CLUSTER_ID_IDENTIFY) {
+        APP_ZCL_vHandleIdentify(sLumiRouter.sIdentifyServerCluster.u16IdentifyTime);
+        if (sLumiRouter.sIdentifyServerCluster.u16IdentifyTime == 0) {
+            tsBDB_ZCLEvent sBDBZCLEvent;
             /* provide callback to BDB handler for identify on Target */
             sBDBZCLEvent.eType = BDB_E_ZCL_EVENT_IDENTIFY;
             sBDBZCLEvent.psCallBackEvent = psEvent;
@@ -548,7 +483,7 @@ PRIVATE void APP_vHandleClusterUpdate(tsZCL_CallBackEvent *psEvent)
 
 /****************************************************************************
  *
- * NAME: registerLumiRouterEndPoint
+ * NAME: APP_ZCL_eRegisterLumiRouterEndPoint
  *
  * DESCRIPTION:
  * Registers an lumi router with the ZCL layer
@@ -563,56 +498,54 @@ PRIVATE void APP_vHandleClusterUpdate(tsZCL_CallBackEvent *psEvent)
  * teZCL_Status
  *
  ****************************************************************************/
-PRIVATE teZCL_Status registerLumiRouterEndPoint(uint8 u8EndPointIdentifier,
-                                    tfpZCL_ZCLCallBackFunction cbCallBack,
-                                    ts_LumiRouter* psDeviceInfo)
+PRIVATE teZCL_Status APP_ZCL_eRegisterLumiRouterEndPoint(uint8 u8EndPointIdentifier,
+                                                         tfpZCL_ZCLCallBackFunction cbCallBack,
+                                                         APP_tsLumiRouter *psDeviceInfo)
 {
     /* Fill in end point details */
     psDeviceInfo->sEndPoint.u8EndPointNumber = u8EndPointIdentifier;
     psDeviceInfo->sEndPoint.u16ManufacturerCode = ZCL_MANUFACTURER_CODE;
     psDeviceInfo->sEndPoint.u16ProfileEnum = HA_PROFILE_ID;
     psDeviceInfo->sEndPoint.bIsManufacturerSpecificProfile = FALSE;
-    psDeviceInfo->sEndPoint.u16NumberOfClusters = sizeof(ts_LumiRouterClusterInstances) / sizeof(tsZCL_ClusterInstance);
-    psDeviceInfo->sEndPoint.psClusterInstance = (tsZCL_ClusterInstance*)&psDeviceInfo->sClusterInstance;
+    psDeviceInfo->sEndPoint.u16NumberOfClusters =
+        sizeof(APP_tsLumiRouterClusterInstances) / sizeof(tsZCL_ClusterInstance);
+    psDeviceInfo->sEndPoint.psClusterInstance = (tsZCL_ClusterInstance *)&psDeviceInfo->sClusterInstance;
     psDeviceInfo->sEndPoint.bDisableDefaultResponse = ZCL_DISABLE_DEFAULT_RESPONSES;
     psDeviceInfo->sEndPoint.pCallBackFunctions = cbCallBack;
 
     if (eCLD_BasicCreateBasic(&psDeviceInfo->sClusterInstance.sBasicServer,
-                          TRUE,
-                          &sCLD_Basic,
-                          &psDeviceInfo->sBasicServerCluster,
-                          &au8BasicClusterAttributeControlBits[0]) != E_ZCL_SUCCESS)
-    {
+                              TRUE,
+                              &sCLD_Basic,
+                              &psDeviceInfo->sBasicServerCluster,
+                              &au8BasicClusterAttributeControlBits[0]) != E_ZCL_SUCCESS) {
         return E_ZCL_FAIL;
     }
 
     if (eCLD_IdentifyCreateIdentify(&psDeviceInfo->sClusterInstance.sIdentifyServer,
-                          TRUE,
-                          &sCLD_Identify,
-                          &psDeviceInfo->sIdentifyServerCluster,
-                          &au8IdentifyAttributeControlBits[0],
-                          &psDeviceInfo->sIdentifyServerCustomDataStructure) != E_ZCL_SUCCESS)
-    {
+                                    TRUE,
+                                    &sCLD_Identify,
+                                    &psDeviceInfo->sIdentifyServerCluster,
+                                    &au8IdentifyAttributeControlBits[0],
+                                    &psDeviceInfo->sIdentifyServerCustomDataStructure) != E_ZCL_SUCCESS) {
         return E_ZCL_FAIL;
     }
 
     if (eCLD_GroupsCreateGroups(&psDeviceInfo->sClusterInstance.sGroupsServer,
-                          TRUE,
-                          &sCLD_Groups,
-                          &psDeviceInfo->sGroupsServerCluster,
-                          &au8GroupsAttributeControlBits[0],
-                          &psDeviceInfo->sGroupsServerCustomDataStructure,
-                          &psDeviceInfo->sEndPoint) != E_ZCL_SUCCESS)
-    {
+                                TRUE,
+                                &sCLD_Groups,
+                                &psDeviceInfo->sGroupsServerCluster,
+                                &au8GroupsAttributeControlBits[0],
+                                &psDeviceInfo->sGroupsServerCustomDataStructure,
+                                &psDeviceInfo->sEndPoint) != E_ZCL_SUCCESS) {
         return E_ZCL_FAIL;
     }
 
-    if (eCLD_DeviceTemperatureConfigurationCreateDeviceTemperatureConfiguration(&psDeviceInfo->sClusterInstance.sDeviceTemperatureConfigurationServer,
-                          TRUE,
-                          &sCLD_DeviceTemperatureConfiguration,
-                          &psDeviceInfo->sDeviceTemperatureConfigurationServerCluster,
-                          &au8DeviceTempConfigClusterAttributeControlBits[0]) != E_ZCL_SUCCESS)
-    {
+    if (eCLD_DeviceTemperatureConfigurationCreateDeviceTemperatureConfiguration(
+            &psDeviceInfo->sClusterInstance.sDeviceTemperatureConfigurationServer,
+            TRUE,
+            &sCLD_DeviceTemperatureConfiguration,
+            &psDeviceInfo->sDeviceTemperatureConfigurationServerCluster,
+            &au8DeviceTempConfigClusterAttributeControlBits[0]) != E_ZCL_SUCCESS) {
         return E_ZCL_FAIL;
     }
 
@@ -621,23 +554,20 @@ PRIVATE teZCL_Status registerLumiRouterEndPoint(uint8 u8EndPointIdentifier,
 
 /****************************************************************************
  *
- * NAME: APP_vZCL_DeviceSpecific_Init
+ * NAME: APP_ZCL_vDeviceSpecific_Init
  *
  * DESCRIPTION:
  * ZCL specific initialization
  *
- * RETURNS:
- * void
- *
  ****************************************************************************/
-PRIVATE void APP_vZCL_DeviceSpecific_Init(void)
+PRIVATE void APP_ZCL_vDeviceSpecific_Init(void)
 {
-    memcpy(sDevice.sBasicServerCluster.au8ManufacturerName, "NXP", CLD_BAS_MANUF_NAME_SIZE);
-    memcpy(sDevice.sBasicServerCluster.au8ModelIdentifier, "openlumi.gw_router.jn5169", CLD_BAS_MODEL_ID_SIZE);
-    memcpy(sDevice.sBasicServerCluster.au8DateCode, "20210219", CLD_BAS_DATE_SIZE);
-    memcpy(sDevice.sBasicServerCluster.au8SWBuildID, "1000-0001", CLD_BAS_SW_BUILD_SIZE);
+    memcpy(sLumiRouter.sBasicServerCluster.au8ManufacturerName, BAS_MANUF_NAME_STRING, CLD_BAS_MANUF_NAME_SIZE);
+    memcpy(sLumiRouter.sBasicServerCluster.au8ModelIdentifier, BAS_MODEL_ID_STRING, CLD_BAS_MODEL_ID_SIZE);
+    memcpy(sLumiRouter.sBasicServerCluster.au8DateCode, BAS_DATE_STRING, CLD_BAS_DATE_SIZE);
+    memcpy(sLumiRouter.sBasicServerCluster.au8SWBuildID, BAS_SW_BUILD_STRING, CLD_BAS_SW_BUILD_SIZE);
 
-    sDevice.sDeviceTemperatureConfigurationServerCluster.i16CurrentTemperature = 0;
+    sLumiRouter.sDeviceTemperatureConfigurationServerCluster.i16CurrentTemperature = 0;
 }
 
 /****************************************************************************/

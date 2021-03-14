@@ -1,12 +1,12 @@
-/*****************************************************************************
+/****************************************************************************
  *
- * MODULE:             JN-AN-1217
+ * MODULE:               Lumi Router
  *
- * COMPONENT:          app_main.c
+ * COMPONENT:            app_main.c
  *
- * DESCRIPTION:
+ * DESCRIPTION:          Application main file
  *
- *****************************************************************************
+ ****************************************************************************
  *
  * This software is owned by NXP B.V. and/or its supplier and is protected
  * under applicable copyright laws. All rights are reserved. We grant You,
@@ -33,46 +33,48 @@
  ****************************************************************************/
 
 /****************************************************************************/
-/***        Include files                                                 ***/
+/***        Include Files                                                 ***/
 /****************************************************************************/
 
-#include <stdint.h>
-#include "jendefs.h"
-#include "ZQueue.h"
-#include "ZTimer.h"
-#include "portmacro.h"
-#include "zps_apl_af.h"
-#include "mac_vs_sap.h"
-#include "AppHardwareApi.h"
-#include "dbg.h"
-#include "app_main.h"
+#include <jendefs.h>
+
+/* Application */
+#include "app_device_temperature.h"
 #include "app_events.h"
-#include "app_zcl_task.h"
-#include "PDM.h"
+#include "app_main.h"
 #include "app_router_node.h"
 #include "app_serial_commands.h"
-#include "app_device_temperature.h"
+#include "app_zcl_task.h"
+
+/* SDK JN-SW-4170 */
+#include "AppHardwareApi.h"
+#include "ZQueue.h"
+#include "ZTimer.h"
+#include "bdb_api.h"
+#include "mac_vs_sap.h"
+#include "portmacro.h"
+#include "zps_apl_af.h"
 
 /****************************************************************************/
 /***        Macro Definitions                                             ***/
 /****************************************************************************/
 
-#ifndef DEBUG_APP
-#define TRACE_APP   FALSE
+#ifdef DEBUG_APP
+#define TRACE_APP TRUE
 #else
-#define TRACE_APP   TRUE
+#define TRACE_APP FALSE
 #endif
 
-#define APP_QUEUE_SIZE               8
-#define BDB_QUEUE_SIZE               2
-#define APP_ZTIMER_STORAGE           2
-#define TIMER_QUEUE_SIZE             8
-#define MLME_QUEQUE_SIZE             8
-#define MCPS_QUEUE_SIZE             20
-#define MCPS_DCFM_QUEUE_SIZE 		5
+#define APP_ZTIMER_STORAGE 2
 
-#define TX_QUEUE_SIZE               150
-#define RX_QUEUE_SIZE               150
+#define APP_QUEUE_SIZE       8
+#define BDB_QUEUE_SIZE       2
+#define MLME_QUEQUE_SIZE     8
+#define MCPS_QUEUE_SIZE      20
+#define TIMER_QUEUE_SIZE     8
+#define MCPS_DCFM_QUEUE_SIZE 5
+#define TX_QUEUE_SIZE        150
+#define RX_QUEUE_SIZE        150
 
 /****************************************************************************/
 /***        Type Definitions                                              ***/
@@ -86,16 +88,12 @@
 /***        Exported Variables                                            ***/
 /****************************************************************************/
 
-PUBLIC uint8 u8TimerZCL;
-
-PUBLIC uint8 u8TmrRestart;
-PUBLIC bool_t bResetIssued = FALSE;
-
-PUBLIC uint8 u8TimerDeviceTempSample;
+PUBLIC uint8 u8TimerTick;
+PUBLIC uint8 u8TimerRestart;
+PUBLIC uint8 u8TimerDeviceTemperature;
 
 PUBLIC tszQueue APP_msgBdbEvents;
 PUBLIC tszQueue APP_msgAppEvents;
-
 PUBLIC tszQueue APP_msgSerialTx;
 PUBLIC tszQueue APP_msgSerialRx;
 
@@ -105,19 +103,19 @@ PUBLIC tszQueue APP_msgSerialRx;
 
 PRIVATE ZTIMER_tsTimer asTimers[APP_ZTIMER_STORAGE + BDB_ZTIMER_STORAGE];
 
-PRIVATE APP_tsEvent         asAppEvent[APP_QUEUE_SIZE];
-PRIVATE BDB_tsZpsAfEvent    asBdbEvent[BDB_QUEUE_SIZE];
-PRIVATE MAC_tsMcpsVsDcfmInd asMacMcpsDcfmInd[MCPS_QUEUE_SIZE];
+PRIVATE APP_tsEvent asAppEvent[APP_QUEUE_SIZE];
+PRIVATE BDB_tsZpsAfEvent asBdbEvent[BDB_QUEUE_SIZE];
 PRIVATE MAC_tsMlmeVsDcfmInd asMacMlmeVsDcfmInd[MLME_QUEQUE_SIZE];
-PRIVATE zps_tsTimeEvent     asTimeEvent[TIMER_QUEUE_SIZE];
+PRIVATE MAC_tsMcpsVsDcfmInd asMacMcpsDcfmInd[MCPS_QUEUE_SIZE];
+PRIVATE zps_tsTimeEvent asTimeEvent[TIMER_QUEUE_SIZE];
 PRIVATE MAC_tsMcpsVsCfmData asMacMcpsDcfm[MCPS_DCFM_QUEUE_SIZE];
-
-uint8               au8TxBuffer[TX_QUEUE_SIZE];
-uint8               au8RxBuffer[RX_QUEUE_SIZE];
+PRIVATE uint8 au8TxBuffer[TX_QUEUE_SIZE];
+PRIVATE uint8 au8RxBuffer[RX_QUEUE_SIZE];
 
 /****************************************************************************/
 /***        Exported Functions                                            ***/
 /****************************************************************************/
+
 extern void zps_taskZPS(void);
 extern void PWRM_vManagePower(void);
 
@@ -128,40 +126,28 @@ extern void PWRM_vManagePower(void);
  * DESCRIPTION:
  * Main application loop
  *
- * RETURNS:
- * void
- *
  ****************************************************************************/
 PUBLIC void APP_vMainLoop(void)
 {
-
-    while (TRUE)
-    {
-        DBG_vPrintf(FALSE, "APP: Entering zps_taskZPS\n");
+    while (TRUE) {
         zps_taskZPS();
 
-        DBG_vPrintf(FALSE, "APP: Entering bdb_taskBDB\n");
         bdb_taskBDB();
 
-        DBG_vPrintf(FALSE, "APP: Entering ZTIMER_vTask\n");
         ZTIMER_vTask();
 
-        DBG_vPrintf(FALSE, "APP: Entering APP_taskRouter\n");
-        APP_taskRouter();
-
-        DBG_vPrintf(FALSE, "APP: Entering APP_taskAtSerial\n");
         APP_taskAtSerial();
+
+        APP_taskRouter();
 
         /* Re-load the watch-dog timer. Execution must return through the idle
          * task before the CPU is suspended by the power manager. This ensures
          * that at least one task / ISR has executed within the watchdog period
-         * otherwise the system will be reset.
-         */
+         * otherwise the system will be reset. */
         vAHI_WatchdogRestart();
 
         /* suspends CPU operation when the system is idle or puts the device to
-         * sleep if there are no activities in progress
-         */
+         * sleep if there are no activities in progress */
         PWRM_vManagePower();
     }
 }
@@ -173,36 +159,13 @@ PUBLIC void APP_vMainLoop(void)
  * DESCRIPTION:
  * Set up interrupts
  *
- * RETURNS:
- * void
- *
  ****************************************************************************/
 PUBLIC void APP_vSetUpHardware(void)
 {
     TARGET_INITIALISE();
-    /* clear interrupt priority level  */
+    /* clear interrupt priority level */
     SET_IPL(0);
     portENABLE_INTERRUPTS();
-}
-
-/****************************************************************************
- *
- * NAME: APP_cbRestart
- *
- * DESCRIPTION:
- * Restart
- *
- * RETURNS:
- * void
- *
- ****************************************************************************/
-PUBLIC void APP_cbRestart(void *pvParam)
-{
-    if(bResetIssued)
-    {
-        vAHI_SwReset();
-        bResetIssued =  FALSE;
-    }
 }
 
 /****************************************************************************
@@ -212,9 +175,6 @@ PUBLIC void APP_cbRestart(void *pvParam)
  * DESCRIPTION:
  * Initialise resources (timers, queue's etc)
  *
- * RETURNS:
- * void
- *
  ****************************************************************************/
 PUBLIC void APP_vInitResources(void)
 {
@@ -222,20 +182,19 @@ PUBLIC void APP_vInitResources(void)
     ZTIMER_eInit(asTimers, sizeof(asTimers) / sizeof(ZTIMER_tsTimer));
 
     /* Create Z timers */
-    ZTIMER_eOpen(&u8TimerZCL,                APP_cbTimerZclTick,            NULL,   ZTIMER_FLAG_PREVENT_SLEEP);
-    ZTIMER_eOpen(&u8TmrRestart,              APP_cbRestart,                 NULL,   ZTIMER_FLAG_PREVENT_SLEEP);
-    ZTIMER_eOpen(&u8TimerDeviceTempSample,   APP_cbTimerDeviceTempSample,   NULL,   ZTIMER_FLAG_PREVENT_SLEEP);
+    ZTIMER_eOpen(&u8TimerTick, APP_cbTimerZclTick, NULL, ZTIMER_FLAG_PREVENT_SLEEP);
+    ZTIMER_eOpen(&u8TimerRestart, APP_cbTimerRestart, NULL, ZTIMER_FLAG_PREVENT_SLEEP);
+    ZTIMER_eOpen(&u8TimerDeviceTemperature, APP_cbTimerDeviceTemperatureUpdate, NULL, ZTIMER_FLAG_PREVENT_SLEEP);
 
     /* Create all the queues */
-    ZQ_vQueueCreate(&APP_msgAppEvents,     APP_QUEUE_SIZE,     sizeof(APP_tsEvent),        (uint8*)asAppEvent);
-    ZQ_vQueueCreate(&APP_msgBdbEvents,     BDB_QUEUE_SIZE,     sizeof(BDB_tsZpsAfEvent),   (uint8*)asBdbEvent);
-    ZQ_vQueueCreate(&zps_msgMlmeDcfmInd,   MLME_QUEQUE_SIZE,   sizeof(MAC_tsMlmeVsDcfmInd),(uint8*)asMacMlmeVsDcfmInd);
-    ZQ_vQueueCreate(&zps_msgMcpsDcfmInd,   MCPS_QUEUE_SIZE,    sizeof(MAC_tsMcpsVsDcfmInd),(uint8*)asMacMcpsDcfmInd);
-    ZQ_vQueueCreate(&zps_msgMcpsDcfm,      MCPS_DCFM_QUEUE_SIZE, sizeof(MAC_tsMcpsVsCfmData),(uint8*)asMacMcpsDcfm);
-    ZQ_vQueueCreate(&zps_TimeEvents,       TIMER_QUEUE_SIZE,   sizeof(zps_tsTimeEvent),    (uint8*)asTimeEvent);
-
-    ZQ_vQueueCreate(&APP_msgSerialTx,      TX_QUEUE_SIZE,   sizeof(uint8),    (uint8*)au8TxBuffer);
-    ZQ_vQueueCreate(&APP_msgSerialRx,      RX_QUEUE_SIZE,   sizeof(uint8),    (uint8*)au8RxBuffer);
+    ZQ_vQueueCreate(&APP_msgAppEvents, APP_QUEUE_SIZE, sizeof(APP_tsEvent), (uint8 *)asAppEvent);
+    ZQ_vQueueCreate(&APP_msgBdbEvents, BDB_QUEUE_SIZE, sizeof(BDB_tsZpsAfEvent), (uint8 *)asBdbEvent);
+    ZQ_vQueueCreate(&zps_msgMlmeDcfmInd, MLME_QUEQUE_SIZE, sizeof(MAC_tsMlmeVsDcfmInd), (uint8 *)asMacMlmeVsDcfmInd);
+    ZQ_vQueueCreate(&zps_msgMcpsDcfmInd, MCPS_QUEUE_SIZE, sizeof(MAC_tsMcpsVsDcfmInd), (uint8 *)asMacMcpsDcfmInd);
+    ZQ_vQueueCreate(&zps_TimeEvents, TIMER_QUEUE_SIZE, sizeof(zps_tsTimeEvent), (uint8 *)asTimeEvent);
+    ZQ_vQueueCreate(&zps_msgMcpsDcfm, MCPS_DCFM_QUEUE_SIZE, sizeof(MAC_tsMcpsVsCfmData), (uint8 *)asMacMcpsDcfm);
+    ZQ_vQueueCreate(&APP_msgSerialTx, TX_QUEUE_SIZE, sizeof(uint8), (uint8 *)au8TxBuffer);
+    ZQ_vQueueCreate(&APP_msgSerialRx, RX_QUEUE_SIZE, sizeof(uint8), (uint8 *)au8RxBuffer);
 }
 
 /****************************************************************************/

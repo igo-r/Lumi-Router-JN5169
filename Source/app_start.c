@@ -1,12 +1,12 @@
-/*****************************************************************************
+/****************************************************************************
  *
- * MODULE:             JN-AN-1217
+ * MODULE:              Lumi Router
  *
- * COMPONENT:          app_start.c
+ * COMPONENT:           app_start.c
  *
- * DESCRIPTION:        Base Device Demo: Router Initialisation
+ * DESCRIPTION:         Router Initialisation
  *
- *****************************************************************************
+ ****************************************************************************
  *
  * This software is owned by NXP B.V. and/or its supplier and is protected
  * under applicable copyright laws. All rights are reserved. We grant You,
@@ -33,49 +33,40 @@
  ****************************************************************************/
 
 /****************************************************************************/
-/***        Include files                                                 ***/
+/***        Include Files                                                 ***/
 /****************************************************************************/
 
 #include <jendefs.h>
-#include "pwrm.h"
-#include "pdum_nwk.h"
-#include "pdum_apl.h"
+
+/* Generated */
 #include "pdum_gen.h"
+
+/* Application */
+#include "app_main.h"
+#include "app_router_node.h"
+#include "uart.h"
+
+/* SDK JN-SW-4170 */
+#include "AppApi.h"
+#include "AppHardwareApi.h"
 #include "PDM.h"
+#include "bdb_api.h"
 #include "dbg.h"
 #include "dbg_uart.h"
-#include "zps_gen.h"
-#include "zps_apl.h"
-#include "zps_apl_af.h"
-#include "zps_apl_zdo.h"
-#include "string.h"
-#include "AppApi.h"
-#include "app_router_node.h"
-#include "zcl_options.h"
-#include "app_common.h"
-#include "app_main.h"
-#include "uart.h"
-#include "portmacro.h"
+#include "pwrm.h"
+#include "zps_nwk_pub.h"
 
 /****************************************************************************/
 /***        Macro Definitions                                             ***/
 /****************************************************************************/
 
 #ifdef DEBUG_APP
-    #define TRACE_APP   TRUE
+#define TRACE_APP TRUE
 #else
-    #define TRACE_APP   FALSE
+#define TRACE_APP FALSE
 #endif
 
-#ifndef UART_DEBUGGING
-    #define UART_DEBUGGING  FALSE
-#endif
-
-#ifndef ENABLING_HIGH_POWER_MODE
-    #define ENABLING_HIGH_POWER_MODE  FALSE
-#endif
-
-#define HALT_ON_EXCEPTION   FALSE
+// #define HALT_ON_EXCEPTION
 
 /****************************************************************************/
 /***        Type Definitions                                              ***/
@@ -108,23 +99,22 @@ extern void *_stack_low_water_mark;
  *
  * DESCRIPTION:
  * Entry point for application from a cold start.
- *
- * RETURNS:
- * Never returns.
+ * ---
+ * Called in SDK JN-SW-4170
  *
  ****************************************************************************/
 PUBLIC void vAppMain(void)
 {
     /* Wait until FALSE i.e. on XTAL - otherwise UART data will be at wrong speed */
-    while (bAHI_GetClkSource() == TRUE);
+    while (bAHI_GetClkSource() == TRUE)
+        ;
 
-    /* Move CPU to 32 MHz  vAHI_OptimiseWaitStates automatically called */
+    /* Move CPU to 32 MHz; vAHI_OptimiseWaitStates automatically called */
     bAHI_SetClockRate(3);
 
-    /* Initialise the debug diagnostics module to use UART0 at 115K Baud;
-     * Do not use UART 1 if LEDs are used, as it shares DIO with the LEDS */
-#if (UART_DEBUGGING == TRUE)
-    DBG_vUartInit(DEBUG_UART, DBG_E_UART_BAUD_RATE_115200);
+#ifdef UART_DEBUGGING
+    /* Initialise the debug diagnostics module to use UART1 at 115K Baud */
+    DBG_vUartInit(DBG_E_UART_1, DBG_E_UART_BAUD_RATE_115200);
 #endif
 
     /* Initialise the stack overflow exception to trigger if the end of the
@@ -133,32 +123,29 @@ PUBLIC void vAppMain(void)
     vAHI_SetStackOverflow(TRUE, (uint32)&_stack_low_water_mark);
 
     /* Catch resets due to watchdog timer expiry. Comment out to harden code. */
-    if (bAHI_WatchdogResetEvent())
-    {
+    if (bAHI_WatchdogResetEvent()) {
         DBG_vPrintf(TRACE_APP, "APP: Watchdog timer has reset device!\n");
-#if HALT_ON_EXCEPTION
+#ifdef HALT_ON_EXCEPTION
         vAHI_WatchdogStop();
-        while (1);
+        while (1)
+        ;
 #endif
     }
 
+#ifdef ENABLING_HIGH_POWER_MODE
     /* After testing on Xiaomi DGNWG05LM and Aqara ZHWG11LM devices, it was
      * decided to use the deprecated vAppApiSetHighPowerMode method for use on
      * JN5168 instead of the new vAHI_ModuleConfigure method for use on JN5169.
      * I checked the following options:
      * - vAHI_ModuleConfigure(E_MODULE_DEFAULT) does not work on Aqara
+     * - vAHI_ModuleConfigure(E_MODULE_JN5169_001_M03_ETSI) does not work on Aqara
      * - vAHI_ModuleConfigure(E_MODULE_JN5169_001_M06_FCC) low signal on Xiaomi
-     * - vAppApiSetHighPowerMode (APP_API_MODULE_HPM05, TRUE) works well both on
-     * Xiaomi and Aqara */
-#if (ENABLING_HIGH_POWER_MODE == TRUE)
+     * - vAppApiSetHighPowerMode (APP_API_MODULE_HPM05, TRUE) works well both on Xiaomi and Aqara */
     vAppApiSetHighPowerMode(APP_API_MODULE_HPM05, TRUE);
 #endif
 
     /* idle task commences here */
-    DBG_vPrintf(TRUE,"\n");
-    DBG_vPrintf(TRUE, "***********************************************\n");
-    DBG_vPrintf(TRUE, "* ROUTER RESET                                *\n");
-    DBG_vPrintf(TRUE, "***********************************************\n");
+    DBG_vPrintf(TRACE_APP, "*** ROUTER RESET ***\n");
 
     DBG_vPrintf(TRACE_APP, "APP: Entering APP_vSetUpHardware()\n");
     APP_vSetUpHardware();
@@ -182,14 +169,12 @@ PUBLIC void vAppMain(void)
  *
  * DESCRIPTION:
  * Power manager callback.
- * Called to allow the application to register
- * sleep and wake callbacks.
- *
- * RETURNS:
- * void
+ * Called to allow the application to register sleep and wake callbacks.
+ * ---
+ * Called in SDK JN-SW-4170
  *
  ****************************************************************************/
-void vAppRegisterPWRMCallbacks(void)
+PUBLIC void vAppRegisterPWRMCallbacks(void)
 {
     /* nothing to register as device does not sleep */
 }
@@ -204,9 +189,6 @@ void vAppRegisterPWRMCallbacks(void)
  *
  * DESCRIPTION:
  * Initialises Zigbee stack, hardware and application.
- *
- * RETURNS:
- * void
  *
  ****************************************************************************/
 PRIVATE void APP_vInitialise(void)
@@ -237,13 +219,10 @@ PRIVATE void APP_vInitialise(void)
  * DESCRIPTION:
  * Callback from stack on extended error situations.
  *
- * RETURNS:
- * void
- *
  ****************************************************************************/
-PRIVATE void vfExtendedStatusCallBack (ZPS_teExtendedStatus eExtendedStatus)
+PRIVATE void vfExtendedStatusCallBack(ZPS_teExtendedStatus eExtendedStatus)
 {
-    DBG_vPrintf(TRUE,"ERROR: Extended status 0x%02x\n", eExtendedStatus);
+    DBG_vPrintf(TRACE_APP, "ERROR: Extended status 0x%02x\n", eExtendedStatus);
 }
 
 /****************************************************************************/

@@ -1,10 +1,10 @@
-/*****************************************************************************
+/****************************************************************************
  *
- * MODULE:             JN-AN-1217
+ * MODULE:              Lumi Router
  *
- * COMPONENT:          uart.h
+ * COMPONENT:           uart.h
  *
- * DESCRIPTION:        UART interface for Base Device application
+ * DESCRIPTION:         UART interface
  *
  ****************************************************************************
  *
@@ -32,17 +32,14 @@
  *
  ****************************************************************************/
 
-
-#ifndef  UART_H_INCLUDED
-#define  UART_H_INCLUDED
-
-#if defined __cplusplus
-extern "C" {
-#endif
+#ifndef UART_H
+#define UART_H
 
 /****************************************************************************/
 /***        Include Files                                                 ***/
 /****************************************************************************/
+
+#include <jendefs.h>
 
 /****************************************************************************/
 /***        Macro Definitions                                             ***/
@@ -53,27 +50,23 @@ extern "C" {
 /****************************************************************************/
 
 /****************************************************************************/
-/***        Exported Functions                                            ***/
-/****************************************************************************/
-PUBLIC void UART_vInit(void);
-PUBLIC void UART_vTxChar(uint8 u8TxChar);
-PUBLIC bool_t UART_bTxReady(void);
-PUBLIC void UART_vRtsStartFlow(void);
-PUBLIC void UART_vRtsStopFlow(void);
-PUBLIC void UART_vSetTxInterrupt(bool_t bState);
-PUBLIC void UART_vSetBaudRate(uint32 u32BaudRate);
-/****************************************************************************/
 /***        Exported Variables                                            ***/
 /****************************************************************************/
 
-#if defined __cplusplus
-}
-#endif
+/****************************************************************************/
+/***        Exported Functions                                            ***/
+/****************************************************************************/
 
-#endif  /* UART_H_INCLUDED */
+PUBLIC void UART_vInit(void);
+PUBLIC void APP_isrUart(void);
+PUBLIC void UART_vTxChar(uint8 u8TxChar);
+PUBLIC bool_t UART_bTxReady(void);
+PUBLIC void UART_vSetTxInterrupt(bool_t bState);
+PUBLIC void UART_vRtsStartFlow(void);
+PUBLIC void UART_vRtsStopFlow(void);
 
 /****************************************************************************/
 /***        END OF FILE                                                   ***/
 /****************************************************************************/
 
-
+#endif /* UART_H */

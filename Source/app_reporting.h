@@ -1,10 +1,10 @@
-/*****************************************************************************
+/****************************************************************************
  *
- * MODULE:             JN-AN-1217
+ * MODULE:              Lumi Router
  *
- * COMPONENT:          app_reporting.h
+ * COMPONENT:           app_reporting.h
  *
- * DESCRIPTION:        Base Device application - reporting functionality
+ * DESCRIPTION:         Reporting functionality
  *
  ****************************************************************************
  *
@@ -30,13 +30,20 @@
  *
  * Copyright NXP B.V. 2016. All rights reserved
  *
- ***************************************************************************/
+ ****************************************************************************/
 
-#ifndef APP_REPORTING_H_
-#define APP_REPORTING_H_
+#ifndef APP_REPORTING_H
+#define APP_REPORTING_H
+
+/****************************************************************************/
+/***        Include Files                                                 ***/
+/****************************************************************************/
+
 #include <jendefs.h>
-#include "zcl.h"
+
+/* SDK JN-SW-4170 */
 #include "PDM.h"
+#include "zcl.h"
 
 /****************************************************************************/
 /***        Macro Definitions                                             ***/
@@ -45,30 +52,28 @@
 /****************************************************************************/
 /***        Type Definitions                                              ***/
 /****************************************************************************/
-typedef struct {
-    uint16 u16ClusterID;
-    tsZCL_AttributeReportingConfigurationRecord sAttributeReportingConfigurationRecord;
-}tsReports;
+
+/****************************************************************************/
+/***        Exported Variables                                            ***/
+/****************************************************************************/
+
 /****************************************************************************/
 /***        Exported Functions                                            ***/
 /****************************************************************************/
-PUBLIC PDM_teStatus eRestoreReports(void);
-PUBLIC void vMakeSupportedAttributesReportable(void);
-PUBLIC void vLoadDefaultConfigForReportable(void);
-PUBLIC void vSaveReportableRecord( uint16 u16ClusterID, tsZCL_AttributeReportingConfigurationRecord* psAttributeReportingConfigurationRecord);
-PUBLIC void vRestoreDefaultRecord( uint8 u8EndPointID, uint16 u16ClusterID, tsZCL_AttributeReportingConfigurationRecord* psAttributeReportingConfigurationRecord);
 
-
-
-
-
-/****************************************************************************/
-/***        External Variables                                            ***/
-/****************************************************************************/
+PUBLIC PDM_teStatus APP_eRestoreReports(void);
+PUBLIC void APP_vMakeSupportedAttributesReportable(void);
+PUBLIC void APP_vLoadDefaultConfigForReportable(void);
+PUBLIC void
+APP_vSaveReportableRecord(uint16 u16ClusterID,
+                          tsZCL_AttributeReportingConfigurationRecord *psAttributeReportingConfigurationRecord);
+PUBLIC void
+APP_vRestoreDefaultRecord(uint8 u8EndPointID,
+                          uint16 u16ClusterID,
+                          tsZCL_AttributeReportingConfigurationRecord *psAttributeReportingConfigurationRecord);
 
 /****************************************************************************/
-
+/***        END OF FILE                                                   ***/
 /****************************************************************************/
-/****************************************************************************/
 
-#endif //APP_REPORTING_H_
+#endif /* APP_REPORTING_H */

@@ -1,10 +1,10 @@
-/*****************************************************************************
+/****************************************************************************
  *
-* MODULE:              JN-AN-1217
+ * MODULE:              Lumi Router
  *
- * COMPONENT:          app_zcl_task.h
+ * COMPONENT:           app_zcl_task.h
  *
- * DESCRIPTION:       Base Device application - ZCL Interface
+ * DESCRIPTION:         ZCL Interface
  *
  ****************************************************************************
  *
@@ -30,7 +30,7 @@
  *
  * Copyright NXP B.V. 2016. All rights reserved
  *
- ***************************************************************************/
+ ****************************************************************************/
 
 /****************************************************************************/
 /* Description.                                                             */
@@ -46,20 +46,21 @@
 /* Description End                                                          */
 /****************************************************************************/
 
-#ifndef APP_ZCL_TASK_H_
-#define APP_ZCL_TASK_H_
+#ifndef APP_ZCL_TASK_H
+#define APP_ZCL_TASK_H
 
 /****************************************************************************/
 /***        Include Files                                                 ***/
 /****************************************************************************/
 
 #include <jendefs.h>
-#include "zcl.h"
 
+/* SDK JN-SW-4170 */
 #include "Basic.h"
-#include "Identify.h"
-#include "Groups.h"
 #include "DeviceTemperatureConfiguration.h"
+#include "Groups.h"
+#include "Identify.h"
+#include "zcl.h"
 
 /****************************************************************************/
 /***        Macro Definitions                                             ***/
@@ -69,21 +70,19 @@
 /***        Type Definitions                                              ***/
 /****************************************************************************/
 
-typedef struct
-{
+typedef struct {
     tsZCL_ClusterInstance sBasicServer;
     tsZCL_ClusterInstance sIdentifyServer;
     tsZCL_ClusterInstance sGroupsServer;
     tsZCL_ClusterInstance sDeviceTemperatureConfigurationServer;
 
-} ts_LumiRouterClusterInstances  __attribute__ ((aligned(4)));
+} APP_tsLumiRouterClusterInstances __attribute__((aligned(4)));
 
-typedef struct
-{
+typedef struct {
     tsZCL_EndPointDefinition sEndPoint;
 
     /* Cluster instances */
-    ts_LumiRouterClusterInstances sClusterInstance;
+    APP_tsLumiRouterClusterInstances sClusterInstance;
 
     /* Basic Cluster - Server */
     tsCLD_Basic sBasicServerCluster;
@@ -99,27 +98,28 @@ typedef struct
     /* Device Temperature Configuration Cluster - Server */
     tsCLD_DeviceTemperatureConfiguration sDeviceTemperatureConfigurationServerCluster;
 
-} ts_LumiRouter;
+} APP_tsLumiRouter;
 
-/****************************************************************************/
-/***        Exported Functions                                            ***/
-/****************************************************************************/
-PUBLIC void APP_ZCL_vInitialise(void);
-PUBLIC void APP_ZCL_vSetIdentifyTime(uint16 u16Time);
-PUBLIC void APP_cbTimerZclTick(void *pvParam);
-PUBLIC void APP_ZCL_vTask(void);
-PUBLIC void APP_ZCL_vEventHandler(ZPS_tsAfEvent *psStackEvent);
-#ifdef CLD_IDENTIFY_10HZ_TICK
-    PUBLIC void vIdEffectTick(uint8 u8Endpoint);
-#endif
 /****************************************************************************/
 /***        Exported Variables                                            ***/
 /****************************************************************************/
 
-extern ts_LumiRouter sDevice;
+extern PUBLIC APP_tsLumiRouter sLumiRouter;
 
-#endif /* APP_ZCL_TASK_H_ */
+/****************************************************************************/
+/***        Exported Functions                                            ***/
+/****************************************************************************/
+
+PUBLIC void APP_ZCL_vInitialise(void);
+PUBLIC void APP_ZCL_vSetIdentifyTime(uint16 u16Time);
+PUBLIC void APP_ZCL_vEventHandler(ZPS_tsAfEvent *psStackEvent);
+PUBLIC void APP_cbTimerZclTick(void *pvParam);
+#ifdef CLD_IDENTIFY_10HZ_TICK
+PUBLIC void vIdEffectTick(uint8 u8Endpoint);
+#endif
 
 /****************************************************************************/
 /***        END OF FILE                                                   ***/
 /****************************************************************************/
+
+#endif /* APP_ZCL_TASK_H */

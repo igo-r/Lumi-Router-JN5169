@@ -1,4 +1,4 @@
-# Lumi Router (JN5169)
+# Lumi Router
 
 This firmware is a replacement for the original firmware for the __Zigbee__ chip JN5169 on __Xiaomi DGNWG05LM__ and __Aqara ZHWG11LM__ gateways which allows to use the gateway as a router (repeater-like) in any Zigbee network instead of the stock coordinator firmware for the propriate Xiaomi MiHome Network.
 
@@ -12,8 +12,8 @@ This instruction assumes that an alternative __OpenWRT__ firmware is already ins
 2. Issue the following commands in the command line.
 
 ```shell
-wget https://github.com/igo-r/Lumi-Router-JN5169/releases/latest/download/Lumi_Router_JN5169_20210219.bin -O /tmp/Lumi_Router.bin 
-jnflash /tmp/Lumi_Router.bin
+wget https://github.com/igo-r/Lumi-Router-JN5169/releases/latest/download/Lumi_Router_JN5169_20210219.bin -O /tmp/LumiRouter.bin 
+jnflash /tmp/LumiRouter.bin
 ```
 
 ## Pairing

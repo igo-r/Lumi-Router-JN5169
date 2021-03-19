@@ -43,8 +43,8 @@
 /***        Macro Definitions                                             ***/
 /****************************************************************************/
 
-#define PDM_ID_APP_ROUTER      0x7
-#define PDM_ID_APP_REPORTS     0x9
+#define PDM_ID_APP_ROUTER  0x1
+#define PDM_ID_APP_REPORTS 0xa
 
 /****************************************************************************/
 /***        Type Definitions                                              ***/

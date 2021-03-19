@@ -45,7 +45,6 @@
 /* Application */
 #include "PDM_IDs.h"
 #include "app_device_temperature.h"
-#include "app_events.h"
 #include "app_main.h"
 #include "app_reporting.h"
 #include "app_router_node.h"
@@ -55,7 +54,6 @@
 /* SDK JN-SW-4170 */
 #include "AppHardwareApi.h"
 #include "PDM.h"
-#include "ZQueue.h"
 #include "bdb_api.h"
 #include "dbg.h"
 #include "mac_vs_sap.h"
@@ -173,37 +171,6 @@ PUBLIC void APP_vInitialiseRouter(void)
 
 /****************************************************************************
  *
- * NAME: APP_taskRouter
- *
- * DESCRIPTION:
- * Task that handles application related functions
- *
- ****************************************************************************/
-PUBLIC void APP_taskRouter(void)
-{
-    APP_tsEvent sAppEvent;
-    sAppEvent.eType = APP_E_EVENT_NONE;
-
-    if (ZQ_bQueueReceive(&APP_msgAppEvents, &sAppEvent) == TRUE) {
-        DBG_vPrintf(TRACE_APP, "ZPR: App event %d, NodeState=%d\n", sAppEvent.eType, eNodeState);
-
-        if (sAppEvent.eType == APP_E_EVENT_LEAVE_AND_RESET) {
-            if (eNodeState == E_RUNNING) {
-                if (ZPS_eAplZdoLeaveNetwork(0UL, FALSE, FALSE) != ZPS_E_SUCCESS) {
-                    APP_vFactoryResetRecords();
-                    vAHI_SwReset();
-                }
-            }
-            else {
-                APP_vFactoryResetRecords();
-                vAHI_SwReset();
-            }
-        }
-    }
-}
-
-/****************************************************************************
- *
  * NAME: APP_cbTimerRestart
  *
  * DESCRIPTION:
@@ -252,8 +219,6 @@ PUBLIC void APP_vBdbCallback(BDB_tsBdbEvent *psBdbEvent)
 
     case BDB_EVENT_NWK_FORMATION_SUCCESS:
         DBG_vPrintf(TRACE_APP, "APP: NwkFormation Success\n");
-        eNodeState = E_RUNNING;
-        PDM_eSaveRecordData(PDM_ID_APP_ROUTER, &eNodeState, sizeof(APP_teNodeState));
         break;
 
     case BDB_EVENT_NWK_STEERING_SUCCESS:
@@ -283,7 +248,7 @@ PRIVATE void APP_vBdbInit(void)
 {
     BDB_tsInitArgs sInitArgs;
 
-    sBDB.sAttrib.bbdbNodeIsOnANetwork = ((eNodeState >= E_RUNNING) ? (TRUE) : (FALSE));
+    sBDB.sAttrib.bbdbNodeIsOnANetwork = (eNodeState == E_RUNNING) ? TRUE : FALSE;
     sInitArgs.hBdbEventsMsgQ = &APP_msgBdbEvents;
     BDB_vInit(&sInitArgs);
 }
@@ -299,13 +264,12 @@ PRIVATE void APP_vBdbInit(void)
 PRIVATE void APP_vHandleAfEvents(BDB_tsZpsAfEvent *psZpsAfEvent)
 {
     if (psZpsAfEvent->u8EndPoint == LUMIROUTER_APPLICATION_ENDPOINT) {
-        DBG_vPrintf(TRACE_APP, "Pass to ZCL\n");
         if ((psZpsAfEvent->sStackEvent.eType == ZPS_EVENT_APS_DATA_INDICATION) ||
             (psZpsAfEvent->sStackEvent.eType == ZPS_EVENT_APS_INTERPAN_DATA_INDICATION)) {
             APP_ZCL_vEventHandler(&psZpsAfEvent->sStackEvent);
         }
     }
-    else if (psZpsAfEvent->u8EndPoint == 0) {
+    else if (psZpsAfEvent->u8EndPoint == LUMIROUTER_ZDO_ENDPOINT) {
         APP_vHandleZdoEvents(psZpsAfEvent);
     }
 
@@ -346,7 +310,6 @@ PRIVATE void APP_vHandleZdoEvents(BDB_tsZpsAfEvent *psZpsAfEvent)
         break;
 
     case ZPS_EVENT_APS_DATA_ACK:
-        break;
         break;
 
     case ZPS_EVENT_NWK_STARTED:

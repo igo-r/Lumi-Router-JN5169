@@ -66,8 +66,6 @@
 #define TRACE_APP FALSE
 #endif
 
-// #define HALT_ON_EXCEPTION
-
 /****************************************************************************/
 /***        Type Definitions                                              ***/
 /****************************************************************************/
@@ -125,11 +123,7 @@ PUBLIC void vAppMain(void)
     /* Catch resets due to watchdog timer expiry. Comment out to harden code. */
     if (bAHI_WatchdogResetEvent()) {
         DBG_vPrintf(TRACE_APP, "APP: Watchdog timer has reset device!\n");
-#ifdef HALT_ON_EXCEPTION
-        vAHI_WatchdogStop();
-        while (1)
-        ;
-#endif
+        DBG_vDumpStack();
     }
 
 #ifdef ENABLING_HIGH_POWER_MODE

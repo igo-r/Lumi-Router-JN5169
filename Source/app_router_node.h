@@ -58,7 +58,6 @@
 /****************************************************************************/
 
 PUBLIC void APP_vInitialiseRouter(void);
-PUBLIC void APP_taskRouter(void);
 PUBLIC void APP_cbTimerRestart(void *pvParam);
 
 /****************************************************************************/

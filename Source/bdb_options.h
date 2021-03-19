@@ -87,6 +87,7 @@
 #define BDB_TC_LINK_KEY_EXCHANGE_METHOD       (0x00)
 #define BDB_TRUST_CENTER_NODE_JOIN_TIMEOUT    (0x0F)
 #define BDB_TRUST_CENTER_REQUIRE_KEYEXCHANGE  (TRUE)
+#define BDB_SET_DEFAULT_TC_POLICY             (FALSE)
 
 /****************************************************************************/
 /***        Type Definitions                                              ***/

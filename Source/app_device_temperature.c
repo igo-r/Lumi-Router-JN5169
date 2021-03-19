@@ -58,7 +58,7 @@
 #define TRACE_DEVICE_TEMPERATURE FALSE
 #endif
 
-#define DEVICE_TEMPERATURE_SAMPLING_TIME_IN_SEC 1000
+#define DEVICE_TEMPERATURE_UPDATE_TIME ZTIMER_TIME_SEC(10)
 
 /****************************************************************************/
 /***        Type Definitions                                              ***/
@@ -68,6 +68,7 @@
 /***        Local Function Prototypes                                     ***/
 /****************************************************************************/
 
+PRIVATE void APP_vDeviceTemperatureUpdate(void);
 PRIVATE int16 APP_i16GetDeviceTemperature(void);
 PRIVATE int16 APP_i16ConvertChipTemp(uint16 u16AdcValue);
 
@@ -102,9 +103,12 @@ PUBLIC void APP_vDeviceTemperatureInit(void)
     while (!bAHI_APRegulatorEnabled())
         ;
 
+    APP_vDeviceTemperatureUpdate();
+
     DBG_vPrintf(TRACE_DEVICE_TEMPERATURE, "APP: Init Device Temperature\n");
 
-    ZTIMER_eStart(u8TimerDeviceTemperature, ZTIMER_TIME_MSEC(10));
+    /* Start the Device Temperature timer */
+    ZTIMER_eStart(u8TimerDeviceTemperature, DEVICE_TEMPERATURE_UPDATE_TIME);
 }
 
 /****************************************************************************
@@ -112,23 +116,35 @@ PUBLIC void APP_vDeviceTemperatureInit(void)
  * NAME: APP_cbTimerDeviceTemperatureUpdate
  *
  * DESCRIPTION:
- * CallBack For Device Temperature update
+ * CallBack For Device Temperature Update timer
  *
  ****************************************************************************/
 PUBLIC void APP_cbTimerDeviceTemperatureUpdate(void *pvParam)
+{
+    APP_vDeviceTemperatureUpdate();
+    ZTIMER_eStart(u8TimerDeviceTemperature, DEVICE_TEMPERATURE_UPDATE_TIME);
+}
+
+/****************************************************************************/
+/***        Local Functions                                               ***/
+/****************************************************************************/
+
+/****************************************************************************
+ *
+ * NAME: APP_vDeviceTemperatureUpdate
+ *
+ * DESCRIPTION:
+ * Device Temperature update
+ *
+ ****************************************************************************/
+PRIVATE void APP_vDeviceTemperatureUpdate(void)
 {
     int16 i16DeviceTemperature = APP_i16GetDeviceTemperature();
 
     DBG_vPrintf(TRACE_DEVICE_TEMPERATURE, "APP: Temp = %d C\n", i16DeviceTemperature);
 
     sLumiRouter.sDeviceTemperatureConfigurationServerCluster.i16CurrentTemperature = i16DeviceTemperature;
-
-    ZTIMER_eStart(u8TimerDeviceTemperature, ZTIMER_TIME_SEC(DEVICE_TEMPERATURE_SAMPLING_TIME_IN_SEC));
 }
-
-/****************************************************************************/
-/***        Local Functions                                               ***/
-/****************************************************************************/
 
 /****************************************************************************
  *

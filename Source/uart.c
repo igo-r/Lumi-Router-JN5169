@@ -58,23 +58,9 @@
 #define TRACE_UART FALSE
 #endif
 
-/* default to uart 0 */
-#ifndef UART
-#define UART E_AHI_UART_0
-#endif
-
-/* default BAUD rate 9600 */
-#ifndef UART_BAUD_RATE
+#define UART           E_AHI_UART_0
 #define UART_BAUD_RATE 115200
-#endif
-
-#if (UART == E_AHI_UART_0)
 #define UART_START_ADR 0x02003000UL
-#elif (UART == E_AHI_UART_1)
-#define UART_START_ADR 0x02004000UL
-#else
-#error UART must be either 0 or 1
-#endif
 
 /****************************************************************************/
 /***        Type Definitions                                              ***/
@@ -113,6 +99,8 @@ PUBLIC void UART_vInit(void)
 {
     DBG_vPrintf(TRACE_UART, "Initialising UART... ");
 
+    vAHI_UartSetRTSCTS(UART, FALSE);
+
     bAHI_UartEnable(UART, txbuf, (uint8)16, rxbuf, (uint8)127);
 
     vAHI_UartReset(UART, TRUE, TRUE);
@@ -122,7 +110,6 @@ PUBLIC void UART_vInit(void)
        directly as the normal routines (in ROM) do not support all baud rates */
     UART_vSetBaudRate(UART_BAUD_RATE);
 
-    vAHI_UartSetRTSCTS(UART, TRUE);
     vAHI_UartSetControl(UART, FALSE, FALSE, E_AHI_UART_WORD_LEN_8, TRUE, FALSE);
     vAHI_UartSetInterrupt(UART, FALSE, FALSE, FALSE, TRUE, E_AHI_UART_FIFO_LEVEL_1);
 

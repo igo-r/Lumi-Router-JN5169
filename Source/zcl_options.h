@@ -67,9 +67,12 @@
 #define ZCL_ATTRIBUTE_READ_SERVER_SUPPORTED
 #define ZCL_ATTRIBUTE_WRITE_SERVER_SUPPORTED
 
+/* Configuring Attribute Reporting */
 #define ZCL_ATTRIBUTE_REPORTING_SERVER_SUPPORTED
 #define ZCL_CONFIGURE_ATTRIBUTE_REPORTING_SERVER_SUPPORTED
 #define ZCL_READ_ATTRIBUTE_REPORTING_CONFIGURATION_SERVER_SUPPORTED
+#define ZCL_SYSTEM_MIN_REPORT_INTERVAL 0
+#define ZCL_SYSTEM_MAX_REPORT_INTERVAL 60
 
 /* Reporting related configuration */
 enum { REPORT_DEVICE_TEMPERATURE_CONFIGURATION_SLOT = 0, NUMBER_OF_REPORTS };
@@ -78,7 +81,9 @@ enum { REPORT_DEVICE_TEMPERATURE_CONFIGURATION_SLOT = 0, NUMBER_OF_REPORTS };
 #define MIN_REPORT_INTERVAL   60
 #define MAX_REPORT_INTERVAL   300
 
-#define ZCL_SYSTEM_MAX_REPORT_INTERVAL 60
+#define CLD_BIND_SERVER
+#define MAX_NUM_BIND_QUEUE_BUFFERS      ZCL_NUMBER_OF_REPORTS
+#define MAX_PDU_BIND_QUEUE_PAYLOAD_SIZE 24
 
 /* Enable wild card profile */
 #define ZCL_ALLOW_WILD_CARD_PROFILE
@@ -91,12 +96,6 @@ enum { REPORT_DEVICE_TEMPERATURE_CONFIGURATION_SLOT = 0, NUMBER_OF_REPORTS };
 /****************************************************************************/
 #define CLD_BASIC
 #define BASIC_SERVER
-
-#define CLD_IDENTIFY
-#define IDENTIFY_SERVER
-
-#define CLD_GROUPS
-#define GROUPS_SERVER
 
 /* Fixing a build error
  * Due to an error in the SDK
@@ -133,23 +132,7 @@ enum { REPORT_DEVICE_TEMPERATURE_CONFIGURATION_SLOT = 0, NUMBER_OF_REPORTS };
 #define CLD_BAS_POWER_SOURCE     E_CLD_BAS_PS_SINGLE_PHASE_MAINS
 #define CLD_BAS_SW_BUILD_SIZE    (9)
 
-/****************************************************************************/
-/*             Identify - Optional Attributes                               */
-/*                                                                          */
-/* Add the following #define's to your zcl_options.h file to add optional   */
-/* attributes to the identify cluster.                                      */
-/****************************************************************************/
-#define CLD_IDENTIFY_CMD_TRIGGER_EFFECT
-#define CLD_IDENTIFY_10HZ_TICK
-
-/****************************************************************************/
-/*             Groups Cluster - Optional Attributes                         */
-/*                                                                          */
-/* Add the following #define's to your zcl_options.h file to add optional   */
-/* attributes to the scenes cluster.                                        */
-/****************************************************************************/
-#define CLD_GROUPS_MAX_NUMBER_OF_GROUPS 16
-#define CLD_GROUPS_DISABLE_NAME_SUPPORT
+#define CLD_BAS_CMD_RESET_TO_FACTORY_DEFAULTS
 
 /****************************************************************************/
 /*      Device Temperature Configuration Cluster - Optional Attributes      */
@@ -157,14 +140,6 @@ enum { REPORT_DEVICE_TEMPERATURE_CONFIGURATION_SLOT = 0, NUMBER_OF_REPORTS };
 /* Add the following #define's to your zcl_options.h file to add optional   */
 /* attributes to the time cluster.                                          */
 /****************************************************************************/
-
-/****************************************************************************/
-/*             Basic Cluster - Optional Commands                            */
-/*                                                                          */
-/* Add the following #define's to your zcl_options.h file to add optional   */
-/* commands to the basic cluster.                                           */
-/****************************************************************************/
-#define CLD_BAS_CMD_RESET_TO_FACTORY_DEFAULTS
 
 /****************************************************************************/
 /***        Type Definitions                                              ***/

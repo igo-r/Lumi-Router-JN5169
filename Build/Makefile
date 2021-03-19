@@ -108,11 +108,7 @@ endif
 ###############################################################################
 # BDB features – Enable as required
 
-#BDB_SUPPORT_TOUCHLINK_INITIATOR ?= 1
-#BDB_SUPPORT_TOUCHLINK_TARGET ?= 1
 BDB_SUPPORT_NWK_STEERING ?= 1
-BDB_SUPPORT_NWK_FORMATION ?= 1
-#BDB_SUPPORT_FIND_AND_BIND_INITIATOR ?= 1
 BDB_SUPPORT_FIND_AND_BIND_TARGET ?= 1
 
 ###############################################################################

@@ -58,8 +58,6 @@
 /* SDK JN-SW-4170 */
 #include "Basic.h"
 #include "DeviceTemperatureConfiguration.h"
-#include "Groups.h"
-#include "Identify.h"
 #include "zcl.h"
 
 /****************************************************************************/
@@ -72,8 +70,6 @@
 
 typedef struct {
     tsZCL_ClusterInstance sBasicServer;
-    tsZCL_ClusterInstance sIdentifyServer;
-    tsZCL_ClusterInstance sGroupsServer;
     tsZCL_ClusterInstance sDeviceTemperatureConfigurationServer;
 
 } APP_tsLumiRouterClusterInstances __attribute__((aligned(4)));
@@ -86,14 +82,6 @@ typedef struct {
 
     /* Basic Cluster - Server */
     tsCLD_Basic sBasicServerCluster;
-
-    /* Identify Cluster - Server */
-    tsCLD_Identify sIdentifyServerCluster;
-    tsCLD_IdentifyCustomDataStructure sIdentifyServerCustomDataStructure;
-
-    /* Groups Cluster - Server */
-    tsCLD_Groups sGroupsServerCluster;
-    tsCLD_GroupsCustomDataStructure sGroupsServerCustomDataStructure;
 
     /* Device Temperature Configuration Cluster - Server */
     tsCLD_DeviceTemperatureConfiguration sDeviceTemperatureConfigurationServerCluster;
@@ -111,12 +99,8 @@ extern PUBLIC APP_tsLumiRouter sLumiRouter;
 /****************************************************************************/
 
 PUBLIC void APP_ZCL_vInitialise(void);
-PUBLIC void APP_ZCL_vSetIdentifyTime(uint16 u16Time);
 PUBLIC void APP_ZCL_vEventHandler(ZPS_tsAfEvent *psStackEvent);
 PUBLIC void APP_cbTimerZclTick(void *pvParam);
-#ifdef CLD_IDENTIFY_10HZ_TICK
-PUBLIC void vIdEffectTick(uint8 u8Endpoint);
-#endif
 
 /****************************************************************************/
 /***        END OF FILE                                                   ***/

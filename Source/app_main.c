@@ -40,7 +40,6 @@
 
 /* Application */
 #include "app_device_temperature.h"
-#include "app_events.h"
 #include "app_main.h"
 #include "app_router_node.h"
 #include "app_serial_commands.h"
@@ -65,9 +64,8 @@
 #define TRACE_APP FALSE
 #endif
 
-#define APP_ZTIMER_STORAGE 2
+#define APP_ZTIMER_STORAGE 3
 
-#define APP_QUEUE_SIZE       8
 #define BDB_QUEUE_SIZE       2
 #define MLME_QUEQUE_SIZE     8
 #define MCPS_QUEUE_SIZE      20
@@ -103,7 +101,6 @@ PUBLIC tszQueue APP_msgSerialRx;
 
 PRIVATE ZTIMER_tsTimer asTimers[APP_ZTIMER_STORAGE + BDB_ZTIMER_STORAGE];
 
-PRIVATE APP_tsEvent asAppEvent[APP_QUEUE_SIZE];
 PRIVATE BDB_tsZpsAfEvent asBdbEvent[BDB_QUEUE_SIZE];
 PRIVATE MAC_tsMlmeVsDcfmInd asMacMlmeVsDcfmInd[MLME_QUEQUE_SIZE];
 PRIVATE MAC_tsMcpsVsDcfmInd asMacMcpsDcfmInd[MCPS_QUEUE_SIZE];
@@ -137,8 +134,6 @@ PUBLIC void APP_vMainLoop(void)
         ZTIMER_vTask();
 
         APP_taskAtSerial();
-
-        APP_taskRouter();
 
         /* Re-load the watch-dog timer. Execution must return through the idle
          * task before the CPU is suspended by the power manager. This ensures
@@ -187,7 +182,6 @@ PUBLIC void APP_vInitResources(void)
     ZTIMER_eOpen(&u8TimerDeviceTemperature, APP_cbTimerDeviceTemperatureUpdate, NULL, ZTIMER_FLAG_PREVENT_SLEEP);
 
     /* Create all the queues */
-    ZQ_vQueueCreate(&APP_msgAppEvents, APP_QUEUE_SIZE, sizeof(APP_tsEvent), (uint8 *)asAppEvent);
     ZQ_vQueueCreate(&APP_msgBdbEvents, BDB_QUEUE_SIZE, sizeof(BDB_tsZpsAfEvent), (uint8 *)asBdbEvent);
     ZQ_vQueueCreate(&zps_msgMlmeDcfmInd, MLME_QUEQUE_SIZE, sizeof(MAC_tsMlmeVsDcfmInd), (uint8 *)asMacMlmeVsDcfmInd);
     ZQ_vQueueCreate(&zps_msgMcpsDcfmInd, MCPS_QUEUE_SIZE, sizeof(MAC_tsMcpsVsDcfmInd), (uint8 *)asMacMcpsDcfmInd);

@@ -496,13 +496,9 @@
         </Endpoints>
         <Endpoints Id="1" Enabled="true" ApplicationDeviceId="0" ApplicationDeviceVersion="1" Profile="HA" Message="APP_ZCL_vEventHandler" Name="Application">
             <InputClusters Cluster="Basic" RxAPDU="LumiRouter->apduZCL" Discoverable="true"/>
-            <InputClusters Cluster="Groups" RxAPDU="LumiRouter->apduZCL" Discoverable="true"/>
-            <InputClusters Cluster="Identify" RxAPDU="LumiRouter->apduZCL" Discoverable="true"/>
             <InputClusters Cluster="DeviceTempCfg" RxAPDU="LumiRouter->apduZCL" Discoverable="true"/>
             <InputClusters Cluster="Default" RxAPDU="LumiRouter->apduZCL" Discoverable="false"/>
             <OutputClusters Cluster="Basic" TxAPDUs="LumiRouter->apduZCL" Discoverable="false"/>
-            <OutputClusters Cluster="Groups" TxAPDUs="LumiRouter->apduZCL" Discoverable="false"/>
-            <OutputClusters Cluster="Identify" TxAPDUs="LumiRouter->apduZCL" Discoverable="false"/>
             <OutputClusters Cluster="DeviceTempCfg" TxAPDUs="LumiRouter->apduZCL" Discoverable="false"/>
         </Endpoints>
         <PDUConfiguration NumNPDUs="25" PDUMMutexName="mutexPDUM">
